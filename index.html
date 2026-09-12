@@ -29,7 +29,7 @@
       opacity: 0 !important;
     }
 
-    /* شاشة الحظر للحسابات المتعددة فقط */
+    /* شاشة الحظر للحسابات المتعددة */
     #ban-screen {
       position: fixed;
       inset: 0;
@@ -529,7 +529,7 @@
     <div class="ban-icon">⛔</div>
     <h2 style="color: #ef4444; font-size: 22px; font-weight: 900; margin-bottom: 8px;">تم حظر هذا الحساب!</h2>
     <p style="font-size: 13px; color: #cbd5e1; line-height: 1.6;">
-      تم اكتشاف فتح حساب إضافي (تعدد) من نفس عنوان الـ IP أو تطبيق معدل. يُسمح فقط بالحساب الأساسي الأول المسجل على هذه الشبكة.
+      تم اكتشاف فتح حساب إضافي (تعدد) من نفس الشبكة أو الجهاز. يُسمح فقط بالحساب الأساسي الأول المسجل على هذا الجهاز.
     </p>
   </div>
 
@@ -768,43 +768,97 @@
       document.getElementById("main-container").style.display = "none";
     }
 
-    // فحص سحابي صارم غير قابل للتخطي
+    // توليد بصمة فريدة للجهاز عبر الـ Canvas لمنع تعدد الحسابات
+    function generateDeviceFingerprint() {
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 200;
+        canvas.height = 50;
+        ctx.textBaseline = "top";
+        ctx.font = "14px 'Arial'";
+        ctx.textBaseline = "alphabetic";
+        ctx.fillStyle = "#f60";
+        ctx.fillRect(125, 1, 62, 20);
+        ctx.fillStyle = "#069";
+        ctx.fillText("MiiNi-Security-Canvas", 2, 15);
+        ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
+        ctx.fillText("MiiNi-Security-Canvas", 4, 17);
+        const b64 = canvas.toDataURL();
+        let hash = 0;
+        for (let i = 0; i < b64.length; i++) {
+          hash = ((hash << 5) - hash) + b64.charCodeAt(i);
+          hash |= 0;
+        }
+        return Math.abs(hash).toString(36);
+      } catch (e) {
+        return "dev_" + screen.width + "x" + screen.height + "_" + navigator.hardwareConcurrency;
+      }
+    }
+
+    // فحص شامل يحظر الحسابات الإضافية ويبقي الحساب الأساسي فقط متاحاً
     async function enforceCloudMultiAccountProtection() {
       try {
-        let clientIp = null;
+        const deviceFp = generateDeviceFingerprint();
+        const localPrimaryUser = localStorage.getItem("miini_primary_device_owner");
+
+        // إذا وُجد تسجيل سابق على نفس الجهاز لحساب مختلف، يتم الحظر فوراً
+        if (localPrimaryUser && localPrimaryUser !== userId) {
+          triggerBan();
+          return false;
+        }
+
+        // جلب عنوان الـ IP
+        let clientIp = "";
         try {
           const res = await fetch("https://api.ipify.org?format=json");
           const data = await res.json();
           clientIp = data.ip;
         } catch(e) {
-          const res2 = await fetch("https://api64.ipify.org?format=json");
-          const data2 = await res2.json();
-          clientIp = data2.ip;
+          try {
+            const res2 = await fetch("https://api64.ipify.org?format=json");
+            const data2 = await res2.json();
+            clientIp = data2.ip;
+          } catch(e2) {
+            clientIp = "local_net";
+          }
         }
 
-        if (!clientIp) return true;
+        // حفظ الحساب الأساسي محلياً
+        if (!localPrimaryUser) {
+          localStorage.setItem("miini_primary_device_owner", userId);
+        }
 
-        const sanitizedIp = clientIp.replace(/[:.]/g, '_');
-        const checkUrl = `https://kvdb.io/4y9K3s5K2g5j6H7p9L1/net_owner_${sanitizedIp}?t=${Date.now()}`;
-        const checkRes = await fetch(checkUrl);
+        const netKey = `net_${clientIp.replace(/[:.]/g, '_')}_${deviceFp}`;
+        const cloudCheckUrl = `https://kvdb.io/4y9K3s5K2g5j6H7p9L1/${netKey}`;
+        const checkRes = await fetch(cloudCheckUrl + `?t=${Date.now()}`);
 
         if (checkRes.status === 404) {
-          await fetch(`https://kvdb.io/4y9K3s5K2g5j6H7p9L1/net_owner_${sanitizedIp}`, {
+          // أول حساب يسجل من هذه الشبكة/الجهاز يصبح الحساب الأساسي
+          await fetch(cloudCheckUrl, {
             method: 'POST',
             body: userId
           });
           return true;
         } else if (checkRes.ok) {
-          const originalOwner = (await checkRes.text()).trim();
+          const primaryOwner = (await checkRes.text()).trim();
 
-          if (originalOwner === userId.trim()) {
+          // السماح للحساب الأساسي الأول فقط
+          if (primaryOwner === userId.trim()) {
             return true;
           } else {
+            // حظر أي حساب ثانوي آخر يدخل من نفس الجهاز أو الشبكة
             triggerBan();
             return false;
           }
         }
       } catch (err) {
+        // حماية محلية احتياطية في حال تعطل خدمة الإنترنت للـ IP
+        const localOwner = localStorage.getItem("miini_primary_device_owner");
+        if (localOwner && localOwner !== userId) {
+          triggerBan();
+          return false;
+        }
         return true;
       }
       return true;
@@ -1283,7 +1337,7 @@
       }, 100);
     }
 
-    // ================= تهيئة وفحص مباشر =================
+    // تهيئة وفحص مباشر
     window.addEventListener('DOMContentLoaded', async () => {
       document.getElementById("username").innerText = userName;
       document.getElementById("welcomeUserName").innerText = userName;

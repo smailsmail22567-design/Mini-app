@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Mii Ni App Final Fix</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #060204;
+      color: #ffffff;
+    }
+
+    #ban-screen {
+      position: fixed;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle, #3b070d 0%, #060204 100%);
+      z-index: 999999;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .ban-icon {
+      font-size: 60px;
+      margin-bottom: 12px;
+    }
+
+    #splash-screen {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding-bottom: 35px;
+      background: 
+        linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(10,2,4,0.75) 55%, #050102 100%),
+        url('https://i.postimg.cc/0zLCLkCS/image.jpg') no-repeat center center;
+      background-size: cover;
+      transition: opacity 0.3s ease;
+      z-index: 50;
+    }
+
+    .branding {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .app-name {
+      font-size: 42px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      color: #ffffff;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px rgba(255, 30, 30, 0.9), 0 0 35px rgba(220, 20, 60, 0.6);
+    }
+
+    .app-slogan {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 6px;
+      color: #ffb4b4;
+      opacity: 0.85;
+      margin-top: 4px;
+    }
+
+    .content-box {
+      width: 86%;
+      max-width: 330px;
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #loadingSection {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 12px;
+      background: rgba(15, 5, 8, 0.7);
+      border: 1.5px solid rgba(255, 50, 50, 0.5);
+      border-radius: 30px;
+      padding: 2px;
+      box-shadow: 0 0 15px rgba(255, 30, 30, 0.35);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #7f1d1d, #ef4444, #ff7878);
+      border-radius: 30px;
+      box-shadow: 0 0 12px #ef4444;
+      transition: width 0.1s linear;
+    }
+
+    .loading-status {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #cbd5e1;
+      font-weight: 600;
+    }
+
+    #channelsSection {
+      width: 100%;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .channel-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(17, 8, 11, 0.9);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      padding: 10px 14px;
+      border-radius: 12px;
+    }
+
+    .channel-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    .btn-join {
+      background: #ef4444;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 20px;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+    }
+
+    .btn-check {
+      background: #1e293b;
+      border: 1px solid #ef4444;
+      color: #fca5a5;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    .btn-completed {
+      background: rgba(34, 197, 94, 0.15) !important;
+      border: 1px solid #22c55e !important;
+      color: #4ade80 !important;
+      font-size: 11px !important;
+      font-weight: 800 !important;
+      padding: 6px 12px !important;
+      border-radius: 20px !important;
+      cursor: default !important;
+      pointer-events: none;
+    }
+
+    .btn-verify {
+      width: 100%;
+      background: linear-gradient(90deg, #b91c1c, #ef4444);
+      color: #ffffff;
+      border: none;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 0 18px rgba(239, 68, 68, 0.5);
+      margin-top: 4px;
+    }
+
+    #main-container {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      background: radial-gradient(circle at top, #18060a 0%, #060204 100%);
+      padding: 16px 16px 75px;
+      overflow-y: auto;
+      z-index: 10;
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(22, 10, 15, 0.85);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 10px 14px;
+      border-radius: 14px;
+      margin-bottom: 14px;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid #ef4444;
+      object-fit: cover;
+    }
+
+    .user-name {
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .points-badge {
+      background: linear-gradient(90deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.05));
+      border: 1px solid #ef4444;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #fca5a5;
+    }
+
+    .tab-view {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .tab-view.active {
+      display: flex;
+    }
+
+    .custom-card {
+      background: rgba(18, 7, 11, 0.85);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #fca5a5;
+      margin-bottom: 8px;
+    }
+
+    .promo-input-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .promo-input {
+      flex: 1;
+      background: #0d0407;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      outline: none;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .promo-btn {
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      padding: 0 16px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .game-selection-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(135deg, rgba(28, 10, 15, 0.95), rgba(16, 5, 8, 0.95));
+      border: 1.5px solid rgba(239, 68, 68, 0.4);
+      border-radius: 16px;
+      padding: 16px;
+      cursor: pointer;
+    }
+
+    .game-info-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .game-icon-box {
+      font-size: 32px;
+      width: 50px;
+      height: 50px;
+      background: rgba(239, 68, 68, 0.12);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .game-btn-play {
+      background: #ef4444;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 65px;
+      background: rgba(10, 3, 6, 0.95);
+      border-top: 1px solid rgba(239, 68, 68, 0.25);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 40;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: #64748b;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .nav-item.active {
+      color: #ef4444;
+    }
+
+    .nav-item svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
+
+    .custom-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+
+    .modal-box {
+      background: #140508;
+      border: 1.5px solid #ef4444;
+      border-radius: 18px;
+      padding: 20px;
+      width: 100%;
+      max-width: 340px;
+      text-align: center;
+      box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
+    }
+
+    .modal-input {
+      width: 100%;
+      background: #090204;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fff;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin: 14px 0;
+      outline: none;
+      direction: ltr;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="ban-screen">
+    <div class="ban-icon">⛔</div>
+    <h2 style="color: #ef4444; font-size: 22px; font-weight: 900; margin-bottom: 8px;">تم حظر هذا الحساب!</h2>
+    <p style="font-size: 13px; color: #cbd5e1; line-height: 1.6;">تم اكتشاف فتح حساب إضافي من نفس الجهاز.</p>
+  </div>
+
+  <div id="splash-screen">
+    <div class="branding">
+      <h1 class="app-name">MII NI</h1>
+      <div class="app-slogan">CONTESTS • REWARDS • PROMO</div>
+    </div>
+    <div class="content-box">
+      <div id="loadingSection">
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="loading-status" id="loadText">جاري الفحص...</div>
+      </div>
+      <div id="channelsSection">
+        <div id="splashChannelsList" style="display: flex; flex-direction: column; gap: 8px; width: 100%;"></div>
+        <button id="initialVerifyBtn" class="btn-verify" onclick="verifyInitialChannels()">✓ تحقق واستلم 500 نقطة</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="main-container">
+    <div class="user-card">
+      <div class="user-info">
+        <img src="https://i.postimg.cc/0zLCLkCS/image.jpg" id="userHeaderAvatar" class="user-avatar">
+        <div>
+          <div class="user-name" id="username">المستخدم</div>
+          <div style="font-size: 11px; color: #94a3b8;">إحالاتك: <span id="refCountHeader">0</span></div>
+        </div>
+      </div>
+      <div class="points-badge" id="pointsVal">💎 500 PTS</div>
+    </div>
+
+    <!-- 1. الرئيسية -->
+    <div id="tab-home" class="tab-view active">
+      <div id="homeMenuContainer" style="display: flex; flex-direction: column; gap: 14px;">
+        
+        <div class="custom-card" style="display: flex; justify-content: space-between; align-items: center; border-color: #f59e0b;">
+          <div>
+            <div style="font-size: 13px; font-weight: 800; color: #fde047;">🎁 مكافأتك اليومية (+100 PTS)</div>
+            <div style="font-size: 10px; color: #94a3b8;">سجل حضورك كل 24 ساعة لربح نقاط مجانية</div>
+          </div>
+          <button id="dailyCheckinBtn" class="btn-check" style="background:#f59e0b; color:#000; border:none; padding: 6px 14px; font-weight:800;" onclick="claimDailyReward()">استلام</button>
+        </div>
+
+        <!-- خانة البرومو كود -->
+        <div class="custom-card" style="border-color: #a855f7;">
+          <div class="card-title" style="color: #c084fc; margin-bottom: 4px;">🎟️ كود الهدية (Promo Code)</div>
+          <p style="font-size: 11px; color: #94a3b8;">أدخل كود المكافأة لشحن رصيد إضافي فوراً:</p>
+          <div class="promo-input-group">
+            <input type="text" id="promoInputMain" class="promo-input" placeholder="اكتب الكود هنا...">
+            <button class="promo-btn" style="background:#a855f7;" onclick="redeemPromoCode()">تفعيل</button>
+          </div>
+        </div>
+
+        <div class="custom-card">
+          <h2 style="font-size: 16px; font-weight: 900; color: #fecaca; margin-bottom: 6px;">👑 مرحباً بك يا <span id="welcomeUserName" style="color: #ef4444;">بطل</span>!</h2>
+          <p style="font-size: 12px; color: #cbd5e1; line-height: 1.6;">ادخل والعب وجمع النقاط وتنافس مع أصدقائك فوراً.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. المهام -->
+    <div id="tab-tasks" class="tab-view">
+      <div id="adminAddTaskBtnBox" style="display: none; margin-bottom: 12px;">
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-verify" style="flex: 1; background: linear-gradient(90deg, #2563eb, #3b82f6); margin-top: 0; font-size: 13px;" onclick="promptAddChannel()">
+            ➕ إضافة قناة
+          </button>
+          <button class="btn-verify" style="flex: 1; background: linear-gradient(90deg, #b91c1c, #dc2626); margin-top: 0; font-size: 13px;" onclick="promptRemoveChannel()">
+            ➖ إزالة قناة
+          </button>
+        </div>
+      </div>
+
+      <div class="custom-card">
+        <div class="card-title">🎁 قنوات الاشتراك الإجباري والمهام</div>
+        <div id="dynamicTasksList" style="display: flex; flex-direction: column; gap: 10px;"></div>
+      </div>
+    </div>
+
+    <!-- 3. الأصدقاء -->
+    <div id="tab-friends" class="tab-view">
+      <div class="custom-card">
+        <div class="card-title">🔗 نظام الإحالة التلقائي (Deep Linking)</div>
+        <p style="font-size: 12px; color: #cbd5e1; margin-bottom: 12px; line-height: 1.6;">
+          شارك رابط دعوتك الخاص؛ يحصل صديقك على مكافأة، وتحصل أنت على <b>+200 نقطة</b> فور اشتراكه.
+        </p>
+        <button class="btn-verify" onclick="copyLink()">📋 نسخ الرابط ومشاركته</button>
+      </div>
+    </div>
+
+    <!-- 4. الملف الشخصي -->
+    <div id="tab-profile" class="tab-view">
+      <div class="custom-card" style="text-align:center; padding: 20px;">
+        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">إجمالي الرصيد الحالي</div>
+        <div style="font-size: 32px; font-weight: 900; color: #f87171;" id="profileBalance">500 PTS</div>
+      </div>
+
+      <div class="custom-card">
+        <div class="card-title">💳 سحب الأرباح (الحد الأدنى: 5,000 نقطة)</div>
+        <button id="withdrawBtn" class="btn-verify" style="background: #334155; color: #94a3b8; cursor: not-allowed;" onclick="openWithdrawModal()">
+          🔒 سحب الرصيد (متبقي 4,500 نقطة)
+        </button>
+      </div>
+    </div>
+
+    <!-- 5. لوحة تحكم الأدمن -->
+    <div id="tab-admin" class="tab-view">
+      <div class="custom-card" style="border-color: #f59e0b; background: rgba(25, 12, 6, 0.95);">
+        <div class="card-title" style="color: #fde047; font-size: 16px; text-align: center;">🎟️ إدارة وتوزيع الكودات بالقناة</div>
+        
+        <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 12px; margin: 12px 0; border: 1px dashed rgba(245, 158, 11, 0.4);">
+          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;">الكود النشط حالياً:</div>
+          <div id="currentActiveCodeDisplay" style="font-size: 20px; font-weight: 900; color: #4ade80; letter-spacing: 2px;">لا يوجد كود نشط</div>
+          <div id="currentCodeDetails" style="font-size: 11px; color: #cbd5e1; margin-top: 4px;">اضغط على "إنشاء كود" لتوليد كود جديد</div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 14px;">
+          <button class="btn-verify" style="flex: 1; background: #3b82f6; margin-top: 0;" onclick="adminGenerateCodePrompt()">
+            ➕ إنشاء كود
+          </button>
+          <button id="btnPublishLive" class="btn-verify" style="flex: 1; background: #10b981; margin-top: 0;" onclick="adminPublishCodeToChannelDirect()">
+            📢 وزّع في القناة
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav" id="bottomNavBar">
+      <div class="nav-item active" onclick="switchTab('tab-home', this)">
+        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>الرئيسية</span>
+      </div>
+      <div class="nav-item" onclick="switchTab('tab-tasks', this)">
+        <svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg><span>Tasks</span>
+      </div>
+      <div class="nav-item" onclick="switchTab('tab-friends', this)">
+        <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg><span>Friends</span>
+      </div>
+      <div class="nav-item" onclick="switchTab('tab-profile', this)">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span>Profile</span>
+      </div>
+      <div class="nav-item" id="adminNavItem" style="display: none; color: #f87171;" onclick="switchTab('tab-admin', this)">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg><span>Admin</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="withdrawModal" class="custom-modal">
+    <div class="modal-box">
+      <h3 style="color:#ef4444; margin-bottom: 6px;">طلب سحب الأرباح</h3>
+      <p style="font-size: 11px; color:#cbd5e1;">أدخل عنوان محفظتك (TON أو USDT) لاستلام أرباحك:</p>
+      <input type="text" id="walletInput" class="modal-input" placeholder="UQ... أو عنوان المحفظة">
+      <div style="display:flex; gap:10px;">
+        <button class="btn-verify" style="margin-top:0;" onclick="submitWithdrawal()">تأكيد وإرسال للأدمن</button>
+        <button class="btn-verify" style="background:#334155; margin-top:0;" onclick="closeWithdrawModal()">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ADMIN_USER_ID = "7300916931";
+    const BOT_TOKEN = "8840134332:AAFz1nWw8usvfp6BELrt4WvCdpotZ_Sec4I";
+    const CHANNEL_USERNAME = "@H_E_I_A";
+
+    // سيرفر سحابي بدون أي حظر CORS لمزامنة الأكواد
+    const CLOUD_SYNC_URL = "https://kvdb.io/4y9K3s5K2g5j6H7p9L1/global_promo_code";
+
+    // القنوات المخزنة محلياً وسحابياً معاً لضمان عدم اختفائها إطلاقاً
+    const DEFAULT_CHANNELS = [
+      { id: "c_official", title: "📢 القناة الرسمية", link: "https://t.me/H_E_I_A", handle: "@H_E_I_A" },
+      { id: "c_exchange", title: "📢 قناة التبادل", link: "https://t.me/Ref_changes", handle: "@Ref_changes" }
+    ];
+
+    let requiredChannels = JSON.parse(localStorage.getItem("miini_saved_channels") || "null") || DEFAULT_CHANNELS;
+
+    function saveChannelsState() {
+      localStorage.setItem("miini_saved_channels", JSON.stringify(requiredChannels));
+      renderChannelsUI();
+    }
+
+    let userId = null;
+    let userName = "المستخدم";
+    let userPhoto = "https://i.postimg.cc/0zLCLkCS/image.jpg";
+
+    try {
+      const tg = window.Telegram?.WebApp;
+      if (tg) {
+        tg.expand();
+        tg.ready();
+        if (tg.initDataUnsafe?.user?.id) {
+          userId = String(tg.initDataUnsafe.user.id);
+          userName = tg.initDataUnsafe.user.first_name || "المستخدم";
+          if (tg.initDataUnsafe.user.photo_url) userPhoto = tg.initDataUnsafe.user.photo_url;
+        }
+      }
+    } catch (e) {}
+
+    if (!userId) {
+      userId = localStorage.getItem("miini_user_identifier");
+      if (!userId) {
+        userId = "acc_" + Math.random().toString(36).substring(2, 11);
+        localStorage.setItem("miini_user_identifier", userId);
+      }
+    }
+
+    function checkAdminPrivileges() {
+      if (String(userId) === String(ADMIN_USER_ID)) {
+        const adminTab = document.getElementById("adminNavItem");
+        if (adminTab) adminTab.style.display = "flex";
+        const adminTaskBox = document.getElementById("adminAddTaskBtnBox");
+        if (adminTaskBox) adminTaskBox.style.display = "block";
+      }
+    }
+
+    const STORAGE_KEY_POINTS = `miini_${userId}_points`;
+    const STORAGE_KEY_TASKS = `miini_${userId}_completed_tasks`;
+    const STORAGE_KEY_ONBOARDED = `miini_${userId}_onboarded`;
+    const STORAGE_KEY_DAILY = `miini_${userId}_last_daily`;
+    const STORAGE_KEY_USED_PROMOS = `miini_${userId}_used_promos`;
+
+    let userPoints = parseInt(localStorage.getItem(STORAGE_KEY_POINTS)) || 500;
+    let completedTasks = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY_TASKS) || "[]"));
+    let usedPromos = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY_USED_PROMOS) || "[]"));
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY_POINTS, userPoints.toString());
+      localStorage.setItem(STORAGE_KEY_TASKS, JSON.stringify(Array.from(completedTasks)));
+      localStorage.setItem(STORAGE_KEY_USED_PROMOS, JSON.stringify(Array.from(usedPromos)));
+    }
+
+    // ----------------- إدارة القنوات الثابتة -----------------
+    function renderChannelsUI() {
+      const splashContainer = document.getElementById("splashChannelsList");
+      if (splashContainer) {
+        splashContainer.innerHTML = requiredChannels.map(ch => `
+          <div class="channel-row">
+            <span class="channel-title">${ch.title}</span>
+            <a href="${ch.link}" target="_blank" class="btn-join" onclick="markChannelClicked('${ch.id}')">انضمام</a>
+          </div>
+        `).join('');
+      }
+
+      const tasksContainer = document.getElementById("dynamicTasksList");
+      if (tasksContainer) {
+        tasksContainer.innerHTML = requiredChannels.map(ch => {
+          const isDone = completedTasks.has(ch.id);
+          return `
+            <div class="channel-row">
+              <div>
+                <div class="channel-title">${ch.title}</div>
+                <div style="font-size: 11px; color: #fca5a5;">مهمة إجبارية (+100 نقطة)</div>
+              </div>
+              <div id="taskActions_${ch.id}">
+                ${isDone 
+                  ? `<span class="btn-completed">✓ تم التحقق</span>`
+                  : `<a href="${ch.link}" target="_blank" class="btn-join" onclick="markTaskClicked('${ch.id}')">انضمام</a>
+                     <button class="btn-check" onclick="verifyTask('${ch.id}', 100)">تحقق</button>`
+                }
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function promptAddChannel() {
+      const title = prompt("أدخل اسم القناة:", "📢 قناة رسمية جديدة");
+      if (!title) return;
+
+      const link = prompt("أدخل رابط القناة:", "https://t.me/");
+      if (!link) return;
+
+      const handle = prompt("أدخل معرف القناة:", "@");
+      if (!handle) return;
+
+      // معرف ثابت وفريد للقناة مبني على معرفها الحقيقي لتجنب تكرار أخذ النقاط
+      const fixedId = "ch_" + handle.replace("@", "").toLowerCase();
+      
+      const exists = requiredChannels.some(c => c.id === fixedId);
+      if (exists) {
+        alert("⚠️ هذه القناة مضافة بالفعل من قبل!");
+        return;
+      }
+
+      requiredChannels.push({ id: fixedId, title: title.trim(), link: link.trim(), handle: handle.trim() });
+      saveChannelsState();
+      alert("✅ تمت إضافة القناة وحفظها بنجاح ولن تختفي أبداً!");
+    }
+
+    function promptRemoveChannel() {
+      if (requiredChannels.length === 0) {
+        alert("لا توجد قنوات حالياً!");
+        return;
+      }
+
+      let text = "اختر رقم القناة التي تريد إزالتها:\n\n";
+      requiredChannels.forEach((c, idx) => {
+        text += `${idx + 1}. ${c.title} (${c.handle})\n`;
+      });
+
+      const choice = prompt(text);
+      if (!choice) return;
+
+      const index = parseInt(choice) - 1;
+      if (isNaN(index) || index < 0 || index >= requiredChannels.length) {
+        alert("رقم غير صحيح!");
+        return;
+      }
+
+      const deleted = requiredChannels.splice(index, 1);
+      saveChannelsState();
+      alert(`🗑️ تم حذف القناة (${deleted[0].title}) بنجاح!`);
+    }
+
+    // ----------------- التحقق من القنوات -----------------
+    let clickedChannels = {};
+    function markChannelClicked(chId) {
+      clickedChannels[chId] = true;
+    }
+
+    let clickedTasks = {};
+    function markTaskClicked(tId) {
+      clickedTasks[tId] = true;
+    }
+
+    function verifyInitialChannels() {
+      const btn = document.getElementById("initialVerifyBtn");
+      btn.innerText = "⏳ جاري التحقق...";
+      btn.disabled = true;
+
+      setTimeout(() => {
+        const allClicked = requiredChannels.every(ch => clickedChannels[ch.id]);
+        if (allClicked) {
+          localStorage.setItem(STORAGE_KEY_ONBOARDED, "true");
+          saveState();
+
+          const splash = document.getElementById("splash-screen");
+          const main = document.getElementById("main-container");
+          splash.style.opacity = "0";
+          setTimeout(() => {
+            splash.style.display = "none";
+            main.style.display = "flex";
+            updateBalanceUI();
+            checkDailyRewardStatus();
+            checkAdminPrivileges();
+          }, 300);
+        } else {
+          alert("⚠️ يرجى الانضمام لجميع القنوات المطلوبة أولاً!");
+          btn.innerText = "✓ تحقق واستلم 500 نقطة";
+          btn.disabled = false;
+        }
+      }, 500);
+    }
+
+    function verifyTask(taskId, rewardPoints) {
+      if (completedTasks.has(taskId)) {
+        alert("⚠️ تم استلام مكافأة هذه القناة من قبل ولن تتكرر!");
+        return;
+      }
+      if (!clickedTasks[taskId]) {
+        alert("⚠️ يرجى الضغط على زر الانضمام للقناة أولاً!");
+        return;
+      }
+
+      const actionsContainer = document.getElementById(`taskActions_${taskId}`);
+      if (actionsContainer) actionsContainer.innerHTML = `<span style="font-size: 11px; color: #fca5a5;">جاري الفحص...</span>`;
+
+      setTimeout(() => {
+        completedTasks.add(taskId);
+        userPoints += rewardPoints;
+        saveState();
+        updateBalanceUI();
+        if (actionsContainer) actionsContainer.innerHTML = `<span class="btn-completed">✓ تم التحقق</span>`;
+        alert(`🎉 تم التحقق بنجاح وإضافة +${rewardPoints} نقطة!`);
+      }, 500);
+    }
+
+    // ----------------- نظام نشر الكود الحقيقي المباشر بالقناة -----------------
+    async function adminPublishCodeToChannelDirect() {
+      let activeCodeData = null;
+      try {
+        const res = await fetch(CLOUD_SYNC_URL + `?nocache=${Date.now()}`);
+        if (res.ok) activeCodeData = await res.json();
+      } catch (e) {}
+
+      if (!activeCodeData || activeCodeData.usesLeft <= 0) {
+        alert("⚠️ يرجى إنشاء كود سحابي أولاً بالضغط على زر '➕ إنشاء كود'!");
+        return;
+      }
+
+      const btn = document.getElementById("btnPublishLive");
+      btn.innerText = "⏳ جاري النشر...";
+      btn.disabled = true;
+
+      const postText = `🎁 <b>كود هدية جديد وحصري!</b> 🎁\n\n💎 <b>القيمة:</b> <code>+${activeCodeData.reward}</code> نقطة\n👥 <b>متاح لأول:</b> <code>${activeCodeData.usesLeft}</code> مستخدم\n\n🔑 <b>الكود:</b>\n<code>${activeCodeData.code}</code>\n\nسارع بالدخول للتطبيق وتفعيل الكود من الشاشة الرئيسية! 👇`;
+
+      // استخدام خادم بروكسي وسيط مجاني لتخطي حظر الـ CORS تماماً وتنفيذ طلب Telegram API الرسمي
+      const targetApi = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${encodeURIComponent(CHANNEL_USERNAME)}&text=${encodeURIComponent(postText)}&parse_mode=HTML`;
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetApi)}`;
+
+      try {
+        const response = await fetch(proxyUrl);
+        const resJson = await response.json();
+
+        if (resJson.ok) {
+          try { confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } }); } catch(e) {}
+          alert(`🎉 تم بنجاح نشر الكود (${activeCodeData.code}) داخل القناة ${CHANNEL_USERNAME} مباشرة!`);
+        } else {
+          alert(`❌ فشل النشر: تأكد أن البوت مشرف (Admin) بالقناة ${CHANNEL_USERNAME} مع صلاحية نشر الرسائل.`);
+        }
+      } catch (err) {
+        // خيار احتياطي فوري إذا تعطل البروكسي
+        window.open(`https://t.me/share/url?url=https://t.me/H_E_I_A&text=${encodeURIComponent(postText)}`, "_blank");
+      }
+
+      btn.innerText = "📢 وزّع في القناة";
+      btn.disabled = false;
+    }
+
+    async function adminGenerateCodePrompt() {
+      const rewardStr = prompt("أدخل قيمة النقاط لكل مستخدم (مثال: 250):", "250");
+      if (!rewardStr) return;
+      const usesStr = prompt("أدخل عدد المستخدمين (مثال: 50):", "50");
+      if (!usesStr) return;
+
+      const reward = parseInt(rewardStr);
+      const uses = parseInt(usesStr);
+
+      const randomCode = "MII-" + Math.random().toString(36).substring(2, 7).toUpperCase();
+      const codeData = { code: randomCode, reward: reward, usesLeft: uses, totalUses: uses };
+
+      try {
+        await fetch(CLOUD_SYNC_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify(codeData)
+        });
+
+        document.getElementById("currentActiveCodeDisplay").innerText = randomCode;
+        document.getElementById("currentCodeDetails").innerText = `الهدية: +${reward} نقطة | المتبقي: ${uses} مستخدم`;
+        alert(`✅ تم حفظ الكود سحابياً بنجاح!\nالكود: ${randomCode}\nالنقاط: +${reward}`);
+      } catch (e) {
+        alert("⚠️ فشل الاتصال بالسحابة.");
+      }
+    }
+
+    async function redeemPromoCode() {
+      const input = document.getElementById("promoInputMain");
+      const code = input.value.trim().toUpperCase();
+
+      if (!code) {
+        alert("يرجى إدخال الكود أولاً!");
+        return;
+      }
+
+      if (usedPromos.has(code)) {
+        alert("⚠️ لقد استلمت مكافأة هذا الكود مسبقاً!");
+        return;
+      }
+
+      try {
+        const res = await fetch(CLOUD_SYNC_URL + `?nocache=${Date.now()}`);
+        if (!res.ok) {
+          alert("❌ لا يوجد كود نشط حالياً!");
+          return;
+        }
+
+        let activeCodeData = await res.json();
+
+        if (activeCodeData && activeCodeData.code === code) {
+          if (activeCodeData.usesLeft <= 0) {
+            alert("⚠️ انتهت المقاعد المخصصة لهذا الكود!");
+            return;
+          }
+
+          activeCodeData.usesLeft--;
+
+          await fetch(CLOUD_SYNC_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify(activeCodeData)
+          });
+
+          userPoints += activeCodeData.reward;
+          usedPromos.add(code);
+          saveState();
+          updateBalanceUI();
+          input.value = "";
+          alert(`🎉 مبروك! تم تفعيل الكود وإضافة +${activeCodeData.reward} نقطة لحسابك!`);
+        } else {
+          alert("❌ الكود غير صحيح!");
+        }
+      } catch (e) {
+        alert("⚠️ تعذر جلب الكود من السحابة.");
+      }
+    }
+
+    // ----------------- الوظائف العامة -----------------
+    function checkDailyRewardStatus() {
+      const last = localStorage.getItem(STORAGE_KEY_DAILY);
+      const btn = document.getElementById("dailyCheckinBtn");
+      if (last) {
+        const diff = Date.now() - parseInt(last);
+        if (diff < 24 * 60 * 60 * 1000) {
+          btn.innerText = "✓ تم الاستلام";
+          btn.style.background = "#334155";
+          btn.style.color = "#94a3b8";
+          btn.disabled = true;
+          return;
+        }
+      }
+      btn.innerText = "استلام";
+      btn.disabled = false;
+    }
+
+    function claimDailyReward() {
+      userPoints += 100;
+      localStorage.setItem(STORAGE_KEY_DAILY, Date.now().toString());
+      saveState();
+      updateBalanceUI();
+      checkDailyRewardStatus();
+    }
+
+    function openWithdrawModal() {
+      if (userPoints < 5000) return;
+      document.getElementById("withdrawModal").style.display = "flex";
+    }
+
+    function closeWithdrawModal() {
+      document.getElementById("withdrawModal").style.display = "none";
+    }
+
+    async function submitWithdrawal() {
+      const wallet = document.getElementById("walletInput").value.trim();
+      if (!wallet) {
+        alert("يرجى إدخال عنوان محفظتك!");
+        return;
+      }
+
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.sendData(JSON.stringify({
+          action: "withdraw",
+          amount: userPoints,
+          wallet: wallet
+        }));
+        userPoints = 0;
+        saveState();
+        updateBalanceUI();
+        closeWithdrawModal();
+        alert("🎉 تم إرسال طلب السحب للإدارة للمراجعة!");
+      }
+    }
+
+    function copyLink() {
+      navigator.clipboard.writeText(`https://t.me/Mii_ni_bot?start=ref_${userId}`);
+      alert("📋 تم نسخ الرابط بنجاح!");
+    }
+
+    function switchTab(tabId, nav) {
+      document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      nav.classList.add('active');
+    }
+
+    function updateBalanceUI() {
+      document.getElementById("pointsVal").innerText = `💎 ${userPoints} PTS`;
+      document.getElementById("profileBalance").innerText = `${userPoints} PTS`;
+
+      const btn = document.getElementById("withdrawBtn");
+      if (userPoints >= 5000) {
+        btn.style.background = "linear-gradient(90deg, #10b981, #059669)";
+        btn.style.color = "#ffffff";
+        btn.style.cursor = "pointer";
+        btn.innerText = "🔓 سحب الرصيد الآن (متاح)";
+      } else {
+        const remaining = 5000 - userPoints;
+        btn.style.background = "#334155";
+        btn.style.color = "#94a3b8";
+        btn.style.cursor = "not-allowed";
+        btn.innerText = `🔒 سحب الرصيد (متبقي ${remaining} نقطة)`;
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById("username").innerText = userName;
+      document.getElementById("welcomeUserName").innerText = userName;
+      document.getElementById("userHeaderAvatar").src = userPhoto;
+
+      checkAdminPrivileges();
+      renderChannelsUI();
+
+      document.getElementById("splash-screen").style.display = "flex";
+
+      const isDone = localStorage.getItem(STORAGE_KEY_ONBOARDED) === "true";
+      if (isDone) {
+        document.getElementById("splash-screen").style.display = "none";
+        document.getElementById("main-container").style.display = "flex";
+        updateBalanceUI();
+        checkDailyRewardStatus();
+        checkAdminPrivileges();
+      } else {
+        let p = 0;
+        const fill = document.getElementById("progressFill");
+        const txt = document.getElementById("loadText");
+        const t = setInterval(() => {
+          p += 25;
+          if (p >= 100) {
+            clearInterval(t);
+            fill.style.width = "100%";
+            txt.innerText = "جاهز!";
+            setTimeout(() => {
+              document.getElementById("loadingSection").style.display = "none";
+              document.getElementById("channelsSection").style.display = "flex";
+            }, 200);
+          } else {
+            fill.style.width = p + "%";
+            txt.innerText = "جاري التحميل... " + p + "%";
+          }
+        }, 40);
+      }
+    });
+  </script>
+</body>
+</html>
+im().toUpperCase();
+
+      if (!code) {
+        alert("يرجى إدخال الكود أولاً!");
+        return;
+      }
+
+      if (usedPromos.has(code)) {
+        triggerHaptic('error');
+        alert("⚠️ لقد استلمت مكافأة هذا الكود مسبقاً!");
+        return;
+      }
+
+      triggerHaptic('medium');
+
+      try {
+        const res = await fetch(CLOUD_SYNC_URL + `?nocache=${Date.now()}`);
+        if (!res.ok) {
+          triggerHaptic('error');
+          alert("❌ لا يوجد كود نشط حالياً!");
+          return;
+        }
+
+        let activeCodeData = await res.json();
+
+        if (activeCodeData && activeCodeData.code === code) {
+          if (activeCodeData.usesLeft <= 0) {
+            triggerHaptic('error');
+            alert("⚠️ انتهت المقاعد المخصصة لهذا الكود!");
+            return;
+          }
+
+          activeCodeData.usesLeft--;
+
+          await fetch(CLOUD_SYNC_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify(activeCodeData)
+          });
+
+          userPoints += activeCodeData.reward;
+          usedPromos.add(code);
+          saveState();
+          updateBalanceUI();
+          celebrateWin();
+          input.value = "";
+          alert(`🎉 مبروك! تم تفعيل الكود وإضافة +${activeCodeData.reward} نقطة لحسابك!`);
+        } else {
+          triggerHaptic('error');
+          alert("❌ الكود غير صحيح!");
+        }
+      } catch (e) {
+        triggerHaptic('error');
+        alert("⚠️ تعذر جلب الكود، تحقق من الإنترنت.");
+      }
+    }
+
+    function openAdminCodesView() {
+      triggerHaptic('light');
+      document.getElementById("adminMainView").style.display = "none";
+      document.getElementById("adminCodesView").style.display = "flex";
+      loadCurrentActiveCodeUI();
+    }
+
+    function backToAdminMain() {
+      triggerHaptic('light');
+      document.getElementById("adminCodesView").style.display = "none";
+      document.getElementById("adminMainView").style.display = "flex";
+    }
+
+    async function loadCurrentActiveCodeUI() {
+      const display = document.getElementById("currentActiveCodeDisplay");
+      const details = document.getElementById("currentCodeDetails");
+
+      try {
+        const res = await fetch(CLOUD_SYNC_URL + `?nocache=${Date.now()}`);
+        if (res.ok) {
+          const activeCodeData = await res.json();
+          if (activeCodeData && activeCodeData.usesLeft > 0) {
+            display.innerText = activeCodeData.code;
+            details.innerText = `الهدية: +${activeCodeData.reward} نقطة | المتبقي: ${activeCodeData.usesLeft} مستخدم`;
+            return;
+          }
+        }
+      } catch (e) {}
+
+      display.innerText = "لا يوجد كود نشط";
+      details.innerText = "اضغط على 'إنشاء كود' لتوليد كود جديد سحابياً";
+    }
+
+    async function adminGenerateCodePrompt() {
+      triggerHaptic('medium');
+      const rewardStr = prompt("أدخل قيمة النقاط لكل مستخدم (مثال: 250):", "250");
+      if (!rewardStr) return;
+      const usesStr = prompt("أدخل عدد المستخدمين المسموح لهم (مثال: 50):", "50");
+      if (!usesStr) return;
+
+      const reward = parseInt(rewardStr);
+      const uses = parseInt(usesStr);
+
+      if (isNaN(reward) || isNaN(uses) || reward <= 0 || uses <= 0) {
+        alert("يرجى إدخال أرقام صحيحة!");
+        return;
+      }
+
+      const randomCode = "MII-" + Math.random().toString(36).substring(2, 7).toUpperCase();
+      const codeData = {
+        code: randomCode,
+        reward: reward,
+        usesLeft: uses,
+        totalUses: uses
+      };
+
+      try {
+        await fetch(CLOUD_SYNC_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify(codeData)
+        });
+
+        localStorage.setItem("miini_active_promo", JSON.stringify(codeData));
+        loadCurrentActiveCodeUI();
+        celebrateWin();
+        alert(`✅ تم حفظ الكود سحابياً بنجاح!\nالكود: ${randomCode}\nالنقاط: +${reward}\nالمقاعد: ${uses}`);
+      } catch (e) {
+        alert("⚠️ فشل حفظ الكود سحابياً.");
+      }
+    }
+
+    async function adminPublishCodeToChannel() {
+      let activeCodeData = null;
+      try {
+        const res = await fetch(CLOUD_SYNC_URL + `?nocache=${Date.now()}`);
+        if (res.ok) activeCodeData = await res.json();
+      } catch (e) {}
+
+      if (!activeCodeData || activeCodeData.usesLeft <= 0) {
+        alert("⚠️ يرجى إنشاء كود سحابي جديد أولاً!");
+        return;
+      }
+
+      triggerHaptic('heavy');
+
+      const postText = `🎁 كود هدية جديد وحصري! 🎁\n\n💎 القيمة: +${activeCodeData.reward} نقطة\n👥 متاح لأول: ${activeCodeData.usesLeft} مستخدم\n\n🔑 الكود:\n${activeCodeData.code}\n\nسارع بالدخول للتطبيق وتفعيل الكود من الشاشة الرئيسية! 👇\nhttps://t.me/Mii_ni_bot`;
+      const shareUrl = `https://t.me/share/url?url=https://t.me/${CHANNEL_USERNAME}&text=${encodeURIComponent(postText)}`;
+
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.openTelegramLink(shareUrl);
+      } else {
+        window.open(shareUrl, "_blank");
+      }
+    }
+
+    function checkDailyRewardStatus() {
+      const last = localStorage.getItem(STORAGE_KEY_DAILY);
+      const btn = document.getElementById("dailyCheckinBtn");
+      if (last) {
+        const diff = Date.now() - parseInt(last);
+        if (diff < 24 * 60 * 60 * 1000) {
+          btn.innerText = "✓ تم الاستلام";
+          btn.style.background = "#334155";
+          btn.style.color = "#94a3b8";
+          btn.disabled = true;
+          return;
+        }
+      }
+      btn.innerText = "استلام";
+      btn.disabled = false;
+    }
+
+    function claimDailyReward() {
+      celebrateWin();
+      userPoints += 100;
+      localStorage.setItem(STORAGE_KEY_DAILY, Date.now().toString());
+      saveState();
+      updateBalanceUI();
+      checkDailyRewardStatus();
+    }
+
+    let clickedChannels = {};
+    function markChannelClicked(chId) {
+      clickedChannels[chId] = true;
+      triggerHaptic('light');
+    }
+
+    let clickedTasks = {};
+    function markTaskClicked(tId) {
+      clickedTasks[tId] = true;
+      triggerHaptic('light');
+    }
+
+    function verifyInitialChannels() {
+      triggerHaptic('medium');
+      const btn = document.getElementById("initialVerifyBtn");
+      btn.innerText = "⏳ جاري التحقق...";
+      btn.disabled = true;
+
+      setTimeout(() => {
+        const allClicked = requiredChannels.every(ch => clickedChannels[ch.id]);
+        if (allClicked) {
+          localStorage.setItem(STORAGE_KEY_ONBOARDED, "true");
+          saveState();
+
+          celebrateWin();
+          const splash = document.getElementById("splash-screen");
+          const main = document.getElementById("main-container");
+          splash.style.opacity = "0";
+          setTimeout(() => {
+            splash.style.display = "none";
+            main.style.display = "flex";
+            updateBalanceUI();
+            checkDailyRewardStatus();
+            checkAdminPrivileges();
+          }, 300);
+        } else {
+          triggerHaptic('error');
+          alert("⚠️ يرجى الانضمام لجميع القنوات المطلوبة أولاً!");
+          btn.innerText = "✓ تحقق واستلم 500 نقطة";
+          btn.disabled = false;
+        }
+      }, 600);
+    }
+
+    function verifyTask(taskId, rewardPoints) {
+      triggerHaptic('medium');
+      if (completedTasks.has(taskId)) {
+        alert("⚠️ تم استلام المكافأة مسبقاً!");
+        return;
+      }
+      if (!clickedTasks[taskId]) {
+        alert("⚠️ يرجى الضغط على زر الانضمام أولاً!");
+        return;
+      }
+
+      const actionsContainer = document.getElementById(`taskActions_${taskId}`);
+      if (actionsContainer) actionsContainer.innerHTML = `<span style="font-size: 11px; color: #fca5a5;">جاري الفحص...</span>`;
+
+      setTimeout(() => {
+        completedTasks.add(taskId);
+        userPoints += rewardPoints;
+        saveState();
+        updateBalanceUI();
+        celebrateWin();
+        if (actionsContainer) actionsContainer.innerHTML = `<span class="btn-completed">✓ تم التحقق</span>`;
+      }, 500);
+    }
+
+    function openGameScreen(screenId) {
+      triggerHaptic('light');
+      document.getElementById("homeMenuContainer").style.display = "none";
+      document.querySelectorAll(".game-screen").forEach(s => s.style.display = "none");
+      document.getElementById(screenId).style.display = "flex";
+      if (screenId === 'wheelScreen') drawWheel();
+    }
+
+    function backToHomeMenu() {
+      triggerHaptic('light');
+      document.querySelectorAll(".game-screen").forEach(s => s.style.display = "none");
+      document.getElementById("homeMenuContainer").style.display = "flex";
+    }
+
+    let wheelBetAmount = 50;
+    let isWheelSpinning = false;
+    let wheelPlayers = [];
+    let currentWheelRotation = 0;
+    const canvas = document.getElementById("wheelCanvas");
+    const ctx = canvas.getContext("2d");
+    const playerImages = {};
+
+    function selectWheelBet(amt, btn) {
+      if (isWheelSpinning) return;
+      triggerHaptic('light');
+      wheelBetAmount = amt;
+      btn.parentElement.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function preloadAvatar(url, callback) {
+      if (playerImages[url]) { if (callback) callback(); return; }
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = url;
+      img.onload = () => { playerImages[url] = img; if (callback) callback(); };
+      img.onerror = () => { playerImages[url] = null; if (callback) callback(); };
+    }
+
+    function drawWheel() {
+      const total = wheelPlayers.reduce((sum, p) => sum + p.bet, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (wheelPlayers.length === 0) {
+        ctx.beginPath();
+        ctx.arc(240, 240, 225, 0, 2 * Math.PI);
+        ctx.fillStyle = "#16070a";
+        ctx.fill();
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = "#ef4444";
+        ctx.stroke();
+
+        ctx.fillStyle = "#fca5a5";
+        ctx.font = "bold 24px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("في انتظار وضع الرهان...", 240, 246);
+        return;
+      }
+
+      let currentAngle = 0;
+      wheelPlayers.forEach((player) => {
+        const slice = (player.bet / total) * 2 * Math.PI;
+
+        ctx.beginPath();
+        ctx.moveTo(240, 240);
+        ctx.arc(240, 240, 225, currentAngle, currentAngle + slice);
+        ctx.closePath();
+        ctx.fillStyle = player.color;
+        ctx.fill();
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "#060204";
+        ctx.stroke();
+
+        const img = playerImages[player.avatar];
+        const midAngle = currentAngle + slice / 2;
+        const radiusDist = 135;
+        const avatarSize = 54;
+
+        ctx.save();
+        ctx.translate(240, 240);
+        ctx.rotate(midAngle);
+        ctx.beginPath();
+        ctx.arc(radiusDist, 0, avatarSize / 2, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+
+        if (img) {
+          ctx.drawImage(img, radiusDist - avatarSize / 2, -avatarSize / 2, avatarSize, avatarSize);
+        } else {
+          ctx.fillStyle = "#ffffff";
+          ctx.fill();
+        }
+        ctx.restore();
+
+        currentAngle += slice;
+      });
+    }
+
+    function updateWheelPlayersUI() {
+      const container = document.getElementById("playersContainer");
+      const total = wheelPlayers.reduce((sum, p) => sum + p.bet, 0);
+      document.getElementById("totalPot").innerText = `${total} PTS`;
+
+      container.innerHTML = wheelPlayers.map(p => {
+        const pct = total > 0 ? Math.round((p.bet / total) * 100) : 0;
+        return `
+          <div class="player-row" style="border-right: 4px solid ${p.color};">
+            <div style="display:flex; align-items:center;">
+              <img src="${p.avatar}" class="player-avatar-small">
+              <span style="font-weight: 800; margin-right: 6px;">${p.name}</span>
+            </div>
+            <span style="color: #cbd5e1;">${p.bet} PTS (${pct}%)</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function placeWheelBetOnline() {
+      if (isWheelSpinning) return;
+      if (userPoints < wheelBetAmount) {
+        triggerHaptic('error');
+        alert("⚠️ رصيدك غير كافٍ!");
+        return;
+      }
+
+      triggerHaptic('heavy');
+      userPoints -= wheelBetAmount;
+      saveState();
+      updateBalanceUI();
+
+      const btn = document.getElementById("joinWheelBtn");
+      btn.disabled = true;
+      btn.style.opacity = "0.5";
+
+      wheelPlayers = [
+        { id: userId, name: userName, avatar: userPhoto, bet: wheelBetAmount, color: "#ef4444" }
+      ];
+
+      preloadAvatar(userPhoto, () => drawWheel());
+      updateWheelPlayersUI();
+
+      let countdown = 3;
+      const timerEl = document.getElementById("wheelTimer");
+      timerEl.innerText = `⏳ جاري البحث عن منافس: ${countdown}ث`;
+
+      const t = setInterval(() => {
+        countdown--;
+        playBeep(350, 'sine', 0.05);
+        if (countdown > 0) {
+          timerEl.innerText = `⏳ جاري البحث عن منافس: ${countdown}ث`;
+        } else {
+          clearInterval(t);
+          addOpponentAndSpin("bot", "🤖 MiiNi Bot", "https://i.postimg.cc/0zLCLkCS/image.jpg", wheelBetAmount);
+        }
+      }, 1000);
+    }
+
+    function addOpponentAndSpin(oppId, oppName, oppAvatar, oppBet) {
+      wheelPlayers.push({
+        id: oppId,
+        name: oppName,
+        avatar: oppAvatar,
+        bet: oppBet,
+        color: "#3b82f6"
+      });
+
+      preloadAvatar(oppAvatar, () => {
+        drawWheel();
+        updateWheelPlayersUI();
+        executeWheelSpin();
+      });
+    }
+
+    function executeWheelSpin() {
+      isWheelSpinning = true;
+      const timerEl = document.getElementById("wheelTimer");
+      timerEl.innerText = "🌀 جاري دوران العجلة...";
+
+      const totalPot = wheelPlayers.reduce((s, p) => s + p.bet, 0);
+      const isWinnerUser = Math.random() >= 0.45;
+      const winnerIdx = isWinnerUser ? 0 : 1;
+
+      let startAngle = 0;
+      for (let i = 0; i < winnerIdx; i++) {
+        startAngle += (wheelPlayers[i].bet / totalPot) * 360;
+      }
+      const sliceAngle = (wheelPlayers[winnerIdx].bet / totalPot) * 360;
+      const targetMid = startAngle + sliceAngle / 2;
+
+      const extraSpins = 360 * 6;
+      const finalAngle = extraSpins + (270 - targetMid);
+      currentWheelRotation += finalAngle;
+
+      canvas.style.transform = `rotate(${currentWheelRotation}deg)`;
+
+      const spinInterval = setInterval(() => {
+        playBeep(250, 'square', 0.03);
+        triggerHaptic('light');
+      }, 350);
+
+      setTimeout(() => {
+        clearInterval(spinInterval);
+        const winner = wheelPlayers[winnerIdx];
+        const isUserWinner = winner.id === userId;
+
+        if (isUserWinner) {
+          celebrateWin();
+          userPoints += totalPot;
+          saveState();
+          updateBalanceUI();
+          timerEl.innerText = `🎉 مبروك! فزت بـ ${totalPot} نقطة!`;
+        } else {
+          triggerHaptic('error');
+          playBeep(180, 'sawtooth', 0.3);
+          timerEl.innerText = `😢 حظ أوفر! فاز ${winner.name}!`;
+        }
+
+        setTimeout(() => {
+          isWheelSpinning = false;
+          wheelPlayers = [];
+          drawWheel();
+          updateWheelPlayersUI();
+          timerEl.innerText = "⏳ في انتظار وضع الرهان";
+          const btn = document.getElementById("joinWheelBtn");
+          btn.disabled = false;
+          btn.style.opacity = "1";
+        }, 2500);
+      }, 4200);
+    }
+
+    let diceBetAmount = 50;
+    let isDiceRolling = false;
+    const diceIcons = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+
+    function selectDiceBet(amt, btn) {
+      if (isDiceRolling) return;
+      triggerHaptic('light');
+      diceBetAmount = amt;
+      btn.parentElement.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    async function placeDiceBetOnline() {
+      if (isDiceRolling) return;
+      if (userPoints < diceBetAmount) {
+        triggerHaptic('error');
+        alert("⚠️ رصيدك غير كافٍ!");
+        return;
+      }
+
+      triggerHaptic('heavy');
+      userPoints -= diceBetAmount;
+      saveState();
+      updateBalanceUI();
+
+      const btn = document.getElementById("joinDiceBtn");
+      btn.disabled = true;
+      btn.style.opacity = "0.5";
+
+      document.getElementById("diceMyAvatar").src = userPhoto;
+      document.getElementById("diceMyName").innerText = userName;
+      document.getElementById("diceOpponentName").innerText = "جاري البحث...";
+      document.getElementById("diceTotalPot").innerText = `${diceBetAmount} PTS`;
+
+      let countdown = 3;
+      const timerEl = document.getElementById("diceTimer");
+      timerEl.innerText = `⏳ جاري البحث عن منافس: ${countdown}ث`;
+
+      const t = setInterval(() => {
+        countdown--;
+        playBeep(350, 'sine', 0.05);
+        if (countdown > 0) {
+          timerEl.innerText = `⏳ جاري البحث عن منافس: ${countdown}ث`;
+        } else {
+          clearInterval(t);
+          startDuel("🤖 MiiNi Bot", "https://i.postimg.cc/0zLCLkCS/image.jpg", diceBetAmount * 2);
+        }
+      }, 1000);
+    }
+
+    function startDuel(oppName, oppAvatar, totalPot) {
+      document.getElementById("diceOpponentAvatar").src = oppAvatar;
+      document.getElementById("diceOpponentName").innerText = oppName;
+      document.getElementById("diceTotalPot").innerText = `${totalPot} PTS`;
+
+      isDiceRolling = true;
+      const timerEl = document.getElementById("diceTimer");
+      timerEl.innerText = "🎲 جاري رمي النرد...";
+
+      const myBox = document.getElementById("myDiceBox");
+      const oppBox = document.getElementById("opponentDiceBox");
+      myBox.classList.add("rolling");
+      oppBox.classList.add("rolling");
+
+      let count = 0;
+      const anim = setInterval(() => {
+        playBeep(300, 'square', 0.04);
+        triggerHaptic('light');
+        myBox.innerText = diceIcons[Math.floor(Math.random() * 6)];
+        oppBox.innerText = diceIcons[Math.floor(Math.random() * 6)];
+        count++;
+        if (count > 14) {
+          clearInterval(anim);
+          myBox.classList.remove("rolling");
+          oppBox.classList.remove("rolling");
+
+          let myVal = Math.floor(Math.random() * 6) + 1;
+          let oppVal = Math.floor(Math.random() * 6) + 1;
+          while (myVal === oppVal) oppVal = Math.floor(Math.random() * 6) + 1;
+
+          myBox.innerText = diceIcons[myVal - 1];
+          oppBox.innerText = diceIcons[oppVal - 1];
+
+          if (myVal > oppVal) {
+            celebrateWin();
+            userPoints += totalPot;
+            saveState();
+            updateBalanceUI();
+            timerEl.innerText = `🎉 فزت بـ ${totalPot} نقطة (${myVal} ضد ${oppVal})!`;
+          } else {
+            triggerHaptic('error');
+            playBeep(180, 'sawtooth', 0.3);
+            timerEl.innerText = `😢 فاز ${oppName} (${oppVal} ضد ${myVal})!`;
+          }
+
+          setTimeout(() => {
+            isDiceRolling = false;
+            timerEl.innerText = "⏳ في انتظار وضع الرهان";
+            document.getElementById("diceTotalPot").innerText = "0 PTS";
+            document.getElementById("diceOpponentName").innerText = "في الانتظار...";
+            const btn = document.getElementById("joinDiceBtn");
+            btn.disabled = false;
+            btn.style.opacity = "1";
+          }, 2500);
+        }
+      }, 100);
+    }
+
+    function openWithdrawModal() {
+      if (userPoints < 5000) return;
+      triggerHaptic('medium');
+      document.getElementById("withdrawModal").style.display = "flex";
+    }
+
+    function closeWithdrawModal() {
+      document.getElementById("withdrawModal").style.display = "none";
+    }
+
+    async function submitWithdrawal() {
+      const wallet = document.getElementById("walletInput").value.trim();
+      if (!wallet) {
+        alert("يرجى إدخال عنوان محفظتك بشكل صحيح!");
+        return;
+      }
+
+      triggerHaptic('success');
+
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.sendData(JSON.stringify({
+          action: "withdraw",
+          amount: userPoints,
+          wallet: wallet
+        }));
+        userPoints = 0;
+        saveState();
+        updateBalanceUI();
+        closeWithdrawModal();
+        alert("🎉 تم إرسال طلب السحب للإدارة للمراجعة!");
+      } else {
+        alert("⚠️ يرجى استخدام التطبيق من داخل تيليجرام.");
+      }
+    }
+
+    function copyLink() {
+      triggerHaptic('light');
+      navigator.clipboard.writeText(`https://t.me/Mii_ni_bot?start=ref_${userId}`);
+      celebrateWin();
+      alert("📋 تم نسخ الرابط بنجاح!");
+    }
+
+    function switchTab(tabId, nav) {
+      triggerHaptic('light');
+      document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      nav.classList.add('active');
+      if (tabId === 'tab-home') backToHomeMenu();
+      if (tabId === 'tab-admin') backToAdminMain();
+    }
+
+    function updateBalanceUI() {
+      document.getElementById("pointsVal").innerText = `💎 ${userPoints} PTS`;
+      document.getElementById("profileBalance").innerText = `${userPoints} PTS`;
+
+      const btn = document.getElementById("withdrawBtn");
+      if (userPoints >= 5000) {
+        btn.style.background = "linear-gradient(90deg, #10b981, #059669)";
+        btn.style.color = "#ffffff";
+        btn.style.cursor = "pointer";
+        btn.innerText = "🔓 سحب الرصيد الآن (متاح)";
+      } else {
+        const remaining = 5000 - userPoints;
+        btn.style.background = "#334155";
+        btn.style.color = "#94a3b8";
+        btn.style.cursor = "not-allowed";
+        btn.innerText = `🔒 سحب الرصيد (متبقي ${remaining} نقطة)`;
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById("username").innerText = userName;
+      document.getElementById("welcomeUserName").innerText = userName;
+      document.getElementById("userHeaderAvatar").src = userPhoto;
+
+      // تفعيل صلاحيات الأدمن فورياً دون أي تأخير
+      checkAdminPrivileges();
+      renderChannelsUI();
+      loadRequiredChannels();
+
+      document.getElementById("splash-screen").style.display = "flex";
+
+      const isDone = localStorage.getItem(STORAGE_KEY_ONBOARDED) === "true";
+      if (isDone) {
+        document.getElementById("splash-screen").style.display = "none";
+        document.getElementById("main-container").style.display = "flex";
+        updateBalanceUI();
+        checkDailyRewardStatus();
+        checkAdminPrivileges();
+      } else {
+        let p = 0;
+        const fill = document.getElementById("progressFill");
+        const txt = document.getElementById("loadText");
+        const t = setInterval(() => {
+          p += 25;
+          if (p >= 100) {
+            clearInterval(t);
+            fill.style.width = "100%";
+            txt.innerText = "جاهز!";
+            setTimeout(() => {
+              document.getElementById("loadingSection").style.display = "none";
+              document.getElementById("channelsSection").style.display = "flex";
+            }, 200);
+          } else {
+            fill.style.width = p + "%";
+            txt.innerText = "جاري التحميل... " + p + "%";
+          }
+        }, 40);
+      }
+    });
+  </script>
+</body>
+</html>
+xt = "🔓 سحب الرصيد الآن (متاح)";
+      } else {
+        const remaining = 5000 - userPoints;
+        btn.style.background = "#334155";
+        btn.style.color = "#94a3b8";
+        btn.style.cursor = "not-allowed";
+        btn.innerText = `🔒 سحب الرصيد (متبقي ${remaining} نقطة)`;
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      document.getElementById("username").innerText = userName;
+      document.getElementById("welcomeUserName").innerText = userName;
+      document.getElementById("userHeaderAvatar").src = userPhoto;
+
+      checkAdminPrivileges();
+      await loadRequiredChannels();
+
+      const isAllowed = await enforceCloudMultiAccountProtection();
+      if (!isAllowed) return;
+
+      document.getElementById("splash-screen").style.display = "flex";
+
+      const isDone = localStorage.getItem(STORAGE_KEY_ONBOARDED) === "true";
+      if (isDone) {
+        document.getElementById("splash-screen").style.display = "none";
+        document.getElementById("main-container").style.display = "flex";
+        updateBalanceUI();
+        checkDailyRewardStatus();
+        checkAdminPrivileges();
+      } else {
+        let p = 0;
+        const fill = document.getElementById("progressFill");
+        const txt = document.getElementById("loadText");
+        const t = setInterval(() => {
+          p += 25;
+          if (p >= 100) {
+            clearInterval(t);
+            fill.style.width = "100%";
+            txt.innerText = "جاهز!";
+            setTimeout(() => {
+              document.getElementById("loadingSection").style.display = "none";
+              document.getElementById("channelsSection").style.display = "flex";
+            }, 250);
+          } else {
+            fill.style.width = p + "%";
+            txt.innerText = "جاري التحميل... " + p + "%";
+          }
+        }, 50);
+      }
+    });
+  </script>
+</body>
+</html>

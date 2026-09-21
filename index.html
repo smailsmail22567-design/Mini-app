@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Mii Ni App</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- مكتبة قصاصات الاحتفال الخفيفة -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <style>
     * {
@@ -551,6 +550,21 @@
       direction: ltr;
       text-align: left;
     }
+
+    .admin-textarea {
+      width: 100%;
+      height: 100px;
+      background: #090204;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fff;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-top: 8px;
+      margin-bottom: 12px;
+      outline: none;
+      resize: none;
+    }
   </style>
 </head>
 <body>
@@ -573,7 +587,7 @@
     <div class="content-box">
       <div id="loadingSection">
         <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-        <div class="loading-status" id="loadText">جاري الفحص والأمان...</div>
+        <div class="loading-status" id="loadText">جاري التحقق من أمان الشبكة...</div>
       </div>
       <div id="channelsSection">
         <div class="channel-row">
@@ -733,12 +747,12 @@
       </div>
     </div>
 
-    <!-- 3. الأصدقاء -->
+    <!-- 3. الأصدقاء (الإحالة) -->
     <div id="tab-friends" class="tab-view">
       <div class="custom-card">
-        <div class="card-title">🔗 رابط الإحالة الخاص بك</div>
-        <p style="font-size: 12px; color: #94a3b8; margin-bottom: 12px; line-height: 1.6;">
-          اربح 200 نقطة عن كل صديق يقوم بالدخول عبر رابطك والاشتراك بالقنوات.
+        <div class="card-title">🔗 نظام الإحالة التلقائي (Deep Linking)</div>
+        <p style="font-size: 12px; color: #cbd5e1; margin-bottom: 12px; line-height: 1.6;">
+          شارك رابط دعوتك الخاص؛ يحصل صديقك على مكافأة ترحيبية، وتحصل أنت تلقائياً على <b>+200 نقطة</b> فور اشتراكه.
         </p>
         <button class="btn-verify" onclick="copyLink()">📋 نسخ الرابط ومشاركته</button>
       </div>
@@ -754,7 +768,7 @@
       <div class="custom-card">
         <div class="card-title">💳 سحب الأرباح (الحد الأدنى: 5,000 نقطة)</div>
         <p style="font-size: 12px; color: #94a3b8; margin-bottom: 14px; line-height: 1.5;">
-          يفتح زر السحب تلقائياً وتتم مراجعة الطلب من قبل الإدارة بعد تقديم عنوان محفظتك.
+          يفتح زر السحب تلقائياً عند إكمال 5,000 نقطة ليتم إرسال إشعار فوري للأدمن للموافقة.
         </p>
         <button id="withdrawBtn" class="btn-verify" style="background: #334155; color: #94a3b8; cursor: not-allowed;" onclick="openWithdrawModal()">
           🔒 سحب الرصيد (متبقي 4,500 نقطة)
@@ -762,8 +776,34 @@
       </div>
     </div>
 
+    <!-- 5. لوحة تحكم الأدمن (خاص بك وحدك - لا تظهر للعامة) -->
+    <div id="tab-admin" class="tab-view">
+      <div class="custom-card" style="border-color: #ef4444; background: rgba(30, 8, 12, 0.95);">
+        <div class="card-title" style="color: #f87171; font-size: 16px;">🛡️ لوحة تحكم المسؤول (خاصة بك)</div>
+        <p style="font-size: 11px; color: #94a3b8; margin-bottom: 14px;">
+          أنت الآن في وضع المسؤول. هذه اللوحة مخفية تماماً عن المستخدمين العاديين.
+        </p>
+
+        <!-- قسم البث الإذاعي -->
+        <div style="border-top: 1px solid rgba(239,68,68,0.3); padding-top: 12px; margin-top: 10px;">
+          <div style="font-size: 13px; font-weight: 800; color: #fde047; margin-bottom: 4px;">📢 نظام البث العام (Broadcast)</div>
+          <p style="font-size: 11px; color: #cbd5e1;">اكتب الرسالة لنشرها لجميع مستخدمي البوت فوراً:</p>
+          <textarea id="broadcastText" class="admin-textarea" placeholder="اكتب نص الإذاعة أو الإعلان هنا..."></textarea>
+          <button class="btn-verify" onclick="sendAdminBroadcast()">🚀 إرسال الإذاعة للجميع عبر البوت</button>
+        </div>
+
+        <!-- قسم معلومات السحب -->
+        <div style="border-top: 1px solid rgba(239,68,68,0.3); padding-top: 12px; margin-top: 14px;">
+          <div style="font-size: 13px; font-weight: 800; color: #4ade80; margin-bottom: 4px;">💳 متابعة السحوبات</div>
+          <p style="font-size: 11px; color: #cbd5e1; line-height: 1.5;">
+            تصلك إشعارات السحب التفاعلية لحظياً داخل محادثة البوت الخاصة بحسابك، مرفقة بأزرار الموافقة ✅ والرفض مع إرجاع الرصيد ❌.
+          </p>
+        </div>
+      </div>
+    </div>
+
     <!-- شريط التنقل السفلي -->
-    <div class="bottom-nav">
+    <div class="bottom-nav" id="bottomNavBar">
       <div class="nav-item active" onclick="switchTab('tab-home', this)">
         <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>الرئيسية</span>
       </div>
@@ -776,24 +816,31 @@
       <div class="nav-item" onclick="switchTab('tab-profile', this)">
         <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span>Profile</span>
       </div>
+      <!-- زر لوحة الأدمن (مخفي افتراضياً ويظهر لك وحدك برمجياً) -->
+      <div class="nav-item" id="adminNavItem" style="display: none; color: #f87171;" onclick="switchTab('tab-admin', this)">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg><span>Admin</span>
+      </div>
     </div>
   </div>
 
-  <!-- نافذة السحب المنبثقة -->
+  <!-- نافذة السحب المخصصة (Modal) -->
   <div id="withdrawModal" class="custom-modal">
     <div class="modal-box">
       <h3 style="color:#ef4444; margin-bottom: 6px;">طلب سحب الأرباح</h3>
       <p style="font-size: 11px; color:#cbd5e1;">أدخل عنوان محفظتك (TON أو USDT) لاستلام أرباحك:</p>
       <input type="text" id="walletInput" class="modal-input" placeholder="UQ... أو عنوان المحفظة">
       <div style="display:flex; gap:10px;">
-        <button class="btn-verify" style="margin-top:0;" onclick="submitWithdrawal()">تأكيد السحب</button>
+        <button class="btn-verify" style="margin-top:0;" onclick="submitWithdrawal()">تأكيد وإرسال للأدمن</button>
         <button class="btn-verify" style="background:#334155; margin-top:0;" onclick="closeWithdrawModal()">إلغاء</button>
       </div>
     </div>
   </div>
 
   <script>
-    // ----------------- توليد الأصوات والاهتزاز (Audio & Haptics) -----------------
+    // ⚠️ استبدل هذا الرقم بالـ ID الحقيقي الخاص بحسابك في تيليجرام
+    const ADMIN_USER_ID = "123456789";
+
+    // ----------------- المؤثرات الصوتية والاهتزاز -----------------
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
     function playBeep(freq = 400, type = 'sine', duration = 0.1) {
@@ -863,34 +910,18 @@
       }
     }
 
+    // إظهار لوحة الأدمن لك وحدك
+    function checkAdminPrivileges() {
+      if (userId === ADMIN_USER_ID) {
+        const adminTab = document.getElementById("adminNavItem");
+        if (adminTab) adminTab.style.display = "flex";
+      }
+    }
+
     function triggerBan() {
       document.getElementById("ban-screen").style.display = "flex";
       document.getElementById("splash-screen").style.display = "none";
       document.getElementById("main-container").style.display = "none";
-    }
-
-    function generateDeviceFingerprint() {
-      try {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = 200;
-        canvas.height = 50;
-        ctx.textBaseline = "top";
-        ctx.font = "14px 'Arial'";
-        ctx.fillStyle = "#f60";
-        ctx.fillRect(125, 1, 62, 20);
-        ctx.fillStyle = "#069";
-        ctx.fillText("MiiNi-Security-Canvas", 2, 15);
-        const b64 = canvas.toDataURL();
-        let hash = 0;
-        for (let i = 0; i < b64.length; i++) {
-          hash = ((hash << 5) - hash) + b64.charCodeAt(i);
-          hash |= 0;
-        }
-        return Math.abs(hash).toString(36);
-      } catch (e) {
-        return "dev_" + screen.width + "x" + screen.height;
-      }
     }
 
     async function enforceCloudMultiAccountProtection() {
@@ -980,6 +1011,7 @@
             main.style.display = "flex";
             updateBalanceUI();
             checkDailyRewardStatus();
+            checkAdminPrivileges();
           }, 300);
         } else {
           triggerHaptic('error');
@@ -1109,6 +1141,16 @@
         }
         ctx.restore();
 
+        ctx.save();
+        ctx.translate(240, 240);
+        ctx.rotate(midAngle);
+        ctx.beginPath();
+        ctx.arc(radiusDist, 0, avatarSize / 2, 0, Math.PI * 2);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "#ffffff";
+        ctx.stroke();
+        ctx.restore();
+
         currentAngle += slice;
       });
     }
@@ -1156,7 +1198,7 @@
       preloadAvatar(userPhoto, () => drawWheel());
       updateWheelPlayersUI();
 
-      let countdown = 3; // بحث سريع 3 ثوانٍ
+      let countdown = 3;
       const timerEl = document.getElementById("wheelTimer");
       timerEl.innerText = `⏳ جاري البحث عن منافس: ${countdown}ث`;
 
@@ -1194,7 +1236,7 @@
       timerEl.innerText = "🌀 جاري دوران العجلة...";
 
       const totalPot = wheelPlayers.reduce((s, p) => s + p.bet, 0);
-      const isWinnerUser = Math.random() >= 0.45; // نسبة فوز عادلة
+      const isWinnerUser = Math.random() >= 0.45;
       const winnerIdx = isWinnerUser ? 0 : 1;
 
       let startAngle = 0;
@@ -1210,7 +1252,6 @@
 
       canvas.style.transform = `rotate(${currentWheelRotation}deg)`;
 
-      // صوت واهتزاز الدوران
       const spinInterval = setInterval(() => {
         playBeep(250, 'square', 0.03);
         triggerHaptic('light');
@@ -1355,7 +1396,7 @@
       }, 100);
     }
 
-    // ----------------- السحب والمودال والربط بالبوت -----------------
+    // ----------------- السحب والمودال والربط المباشر -----------------
     function openWithdrawModal() {
       if (userPoints < 5000) return;
       triggerHaptic('medium');
@@ -1369,13 +1410,13 @@
     function submitWithdrawal() {
       const wallet = document.getElementById("walletInput").value.trim();
       if (!wallet) {
-        alert("يرجى كتابة عنوان المحفظة بشكل صحيح!");
+        alert("يرجى إدخال عنوان محفظتك بشكل صحيح!");
         return;
       }
 
       triggerHaptic('success');
       
-      // إرسال البيانات مباشرة لبوت التيليجرام المشغل للبوت
+      // إرسال البيانات فوراً إلى محادثة البوت لمراجعة الأدمن
       if (window.Telegram?.WebApp) {
         window.Telegram.WebApp.sendData(JSON.stringify({
           action: "withdraw",
@@ -1386,6 +1427,28 @@
       } else {
         alert("🎉 تم إرسال طلب السحب بنجاح للإدارة للمراجعة!");
         closeWithdrawModal();
+      }
+    }
+
+    // ----------------- إجراءات لوحة الأدمن -----------------
+    function sendAdminBroadcast() {
+      const msg = document.getElementById("broadcastText").value.trim();
+      if (!msg) {
+        alert("يرجى كتابة نص الرسالة أولاً!");
+        return;
+      }
+
+      triggerHaptic('medium');
+      if (window.Telegram?.WebApp) {
+        // إرسال أمر الإذاعة للبوت مباشرة
+        window.Telegram.WebApp.sendData(JSON.stringify({
+          action: "broadcast",
+          text: msg
+        }));
+        alert("🚀 جاري معالجة الإذاعة وإرسالها لكافة المشتركين عبر البوت!");
+        document.getElementById("broadcastText").value = "";
+      } else {
+        alert("⚠️ يرجى تشغيل التطبيق من داخل تيليجرام لتنفيذ الإذاعة.");
       }
     }
 
@@ -1424,7 +1487,7 @@
       }
     }
 
-    // ----------------- التهيئة عند التحميل -----------------
+    // ----------------- التهيئة -----------------
     window.addEventListener('DOMContentLoaded', async () => {
       document.getElementById("username").innerText = userName;
       document.getElementById("welcomeUserName").innerText = userName;
@@ -1448,6 +1511,7 @@
         document.getElementById("main-container").style.display = "flex";
         updateBalanceUI();
         checkDailyRewardStatus();
+        checkAdminPrivileges();
       } else {
         let p = 0;
         const fill = document.getElementById("progressFill");
@@ -1472,4 +1536,3 @@
   </script>
 </body>
 </html>
-

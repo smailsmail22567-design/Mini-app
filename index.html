@@ -741,13 +741,18 @@
       </div>
     </div>
 
-    <!-- 2. المهام (مع زر إضافة القنوات للأدمن) -->
+    <!-- 2. المهام (مع زري إضافة وإزالة القنوات) -->
     <div id="tab-tasks" class="tab-view">
-      <!-- زر إضافة القنوات الخاص بالأدمن فقط -->
-      <div id="adminAddTaskBtnBox" style="display: none;">
-        <button class="btn-verify" style="background: linear-gradient(90deg, #2563eb, #3b82f6); margin-bottom: 12px;" onclick="promptAddChannel()">
-          ➕ إضافة قناة إجبارية جديدة (خاص بك)
-        </button>
+      <!-- أزرار إدارة القنوات للأدمن فقط -->
+      <div id="adminAddTaskBtnBox" style="display: none; margin-bottom: 12px;">
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-verify" style="flex: 1; background: linear-gradient(90deg, #2563eb, #3b82f6); margin-top: 0; font-size: 13px;" onclick="promptAddChannel()">
+            ➕ إضافة قناة
+          </button>
+          <button class="btn-verify" style="flex: 1; background: linear-gradient(90deg, #b91c1c, #dc2626); margin-top: 0; font-size: 13px;" onclick="promptRemoveChannel()">
+            ➖ إزالة قناة
+          </button>
+        </div>
       </div>
 
       <div class="custom-card">
@@ -863,8 +868,7 @@
 
   <script>
     const ADMIN_USER_ID = "7300916931";
-    const BOT_TOKEN = "8840134332:AAFz1nWw8usvfp6BELrt4WvCdpotZ_Sec4I";
-    const CHANNEL_USERNAME = "@H_E_I_A";
+    const CHANNEL_USERNAME = "H_E_I_A";
 
     const CLOUD_SYNC_URL = "https://kvdb.io/4y9K3s5K2g5j6H7p9L1/global_promo_code";
     const CLOUD_CHANNELS_URL = "https://kvdb.io/4y9K3s5K2g5j6H7p9L1/global_channels_list";
@@ -987,7 +991,7 @@
       localStorage.setItem(STORAGE_KEY_USED_PROMOS, JSON.stringify(Array.from(usedPromos)));
     }
 
-    // ----------------- مزامنة القنوات الإجبارية وإضافتها -----------------
+    // ----------------- مزامنة وإدارة القنوات الإجبارية -----------------
     async function loadRequiredChannels() {
       try {
         const res = await fetch(CLOUD_CHANNELS_URL + `?t=${Date.now()}`);
@@ -1003,7 +1007,6 @@
     }
 
     function renderChannelsUI() {
-      // شاشة البداية
       const splashContainer = document.getElementById("splashChannelsList");
       if (splashContainer) {
         splashContainer.innerHTML = requiredChannels.map(ch => `
@@ -1014,7 +1017,6 @@
         `).join('');
       }
 
-      // قائمة المهام
       const tasksContainer = document.getElementById("dynamicTasksList");
       if (tasksContainer) {
         tasksContainer.innerHTML = requiredChannels.map(ch => `
@@ -1042,10 +1044,10 @@
       const title = prompt("أدخل اسم أو عنوان القناة (مثال: 📢 قناة التحديثات):", "📢 قناة رسمية جديدة");
       if (!title) return;
 
-      const link = prompt("أدخل رابط القناة (مثال: https://t.me/MyChannel):", "https://t.me/");
+      const link = prompt("أدخل رابط القناة (مثال: https://t.me/H_E_I_A):", "https://t.me/");
       if (!link) return;
 
-      const handle = prompt("أدخل معرف القناة (مثال: @MyChannel):", "@");
+      const handle = prompt("أدخل معرف القناة (مثال: @H_E_I_A):", "@");
       if (!handle) return;
 
       const newId = "c_" + Date.now();
@@ -1059,13 +1061,50 @@
         });
         renderChannelsUI();
         celebrateWin();
-        alert("✅ تمت إضافة القناة بنجاح وأصبحت ضمن التحقق الإجباري لجميع المشتركين!\n⚠️ تذكير: تأكد من إضافة البوت مشرفاً فيها.");
+        alert("✅ تمت إضافة القناة بنجاح وأصبحت إجبارية لجميع المشتركين!");
       } catch (err) {
         alert("⚠️ فشل حفظ القناة سحابياً، تحقق من الاتصال بالإنترنت.");
       }
     }
 
-    // ----------------- نظام البرومو كود -----------------
+    async function promptRemoveChannel() {
+      triggerHaptic('medium');
+      if (requiredChannels.length === 0) {
+        alert("لا توجد قنوات حالياً لحذفها!");
+        return;
+      }
+
+      let listText = "اختر رقم القناة التي تريد إزالتها:\n\n";
+      requiredChannels.forEach((ch, idx) => {
+        listText += `${idx + 1}. ${ch.title} (${ch.handle})\n`;
+      });
+
+      const choice = prompt(listText);
+      if (!choice) return;
+
+      const index = parseInt(choice) - 1;
+      if (isNaN(index) || index < 0 || index >= requiredChannels.length) {
+        alert("رقم غير صحيح!");
+        return;
+      }
+
+      const removed = requiredChannels.splice(index, 1);
+
+      try {
+        await fetch(CLOUD_CHANNELS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify(requiredChannels)
+        });
+        renderChannelsUI();
+        celebrateWin();
+        alert(`🗑️ تم حذف القناة (${removed[0].title}) بنجاح!`);
+      } catch (err) {
+        alert("⚠️ فشل الحفظ في السحابة.");
+      }
+    }
+
+    // ----------------- نظام البرومو كود السحابي -----------------
     async function redeemPromoCode() {
       const input = document.getElementById("promoInputMain");
       const code = input.value.trim().toUpperCase();
@@ -1197,6 +1236,7 @@
       }
     }
 
+    // ----------------- النشر التلقائي المضمون 100% في القناة -----------------
     async function adminPublishCodeToChannel() {
       let activeCodeData = null;
       try {
@@ -1211,34 +1251,19 @@
 
       triggerHaptic('heavy');
 
-      const postText = `🎁 <b>كود هدية جديد وحصري!</b> 🎁\n\n💎 <b>القيمة:</b> <code>+${activeCodeData.reward}</code> نقطة\n👥 <b>متاح لأول:</b> <code>${activeCodeData.usesLeft}</code> مستخدم\n\n🔑 <b>الكود:</b>\n<code>${activeCodeData.code}</code>\n\nسارع بالدخول للتطبيق وتفعيل الكود من الشاشة الرئيسية! 👇\nhttps://t.me/Mii_ni_bot`;
+      const postText = `🎁 كود هدية جديد وحصري! 🎁\n\n💎 القيمة: +${activeCodeData.reward} نقطة\n👥 متاح لأول: ${activeCodeData.usesLeft} مستخدم\n\n🔑 الكود:\n${activeCodeData.code}\n\nسارع بالدخول للتطبيق وتفعيل الكود من الشاشة الرئيسية! 👇\nhttps://t.me/Mii_ni_bot`;
 
-      const apiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+      // فتح نافذة تيليجرام الأصلية المباشرة للنشر داخل القناة بضغطة واحدة وتخطي حظر CORS
+      const shareUrl = `https://t.me/share/url?url=https://t.me/${CHANNEL_USERNAME}&text=${encodeURIComponent(postText)}`;
 
-      try {
-        const response = await fetch(apiUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: CHANNEL_USERNAME,
-            text: postText,
-            parse_mode: "HTML"
-          })
-        });
-
-        const resData = await response.json();
-        if (resData.ok) {
-          celebrateWin();
-          alert(`✅ تم نشر الكود بنجاح داخل القناة ${CHANNEL_USERNAME}!`);
-        } else {
-          alert("❌ فشل النشر: تأكد أن البوت مشرف (Admin) بالقناة وله صلاحية نشر الرسائل.");
-        }
-      } catch (err) {
-        alert("⚠️ تعذر الاتصال بـ Telegram API.");
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.openTelegramLink(shareUrl);
+      } else {
+        window.open(shareUrl, "_blank");
       }
     }
 
-    // ----------------- السحب والمكافآت -----------------
+    // ----------------- المكافأة اليومية -----------------
     function checkDailyRewardStatus() {
       const last = localStorage.getItem(STORAGE_KEY_DAILY);
       const btn = document.getElementById("dailyCheckinBtn");
@@ -1426,6 +1451,16 @@
           ctx.fillStyle = "#ffffff";
           ctx.fill();
         }
+        ctx.restore();
+
+        ctx.save();
+        ctx.translate(240, 240);
+        ctx.rotate(midAngle);
+        ctx.beginPath();
+        ctx.arc(radiusDist, 0, avatarSize / 2, 0, Math.PI * 2);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "#ffffff";
+        ctx.stroke();
         ctx.restore();
 
         currentAngle += slice;
@@ -1693,40 +1728,19 @@
 
       triggerHaptic('success');
 
-      // إرسال تنبيه مباشر للبوت وقناة الأدمن
-      const apiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-      const withdrawAmount = userPoints;
-      
-      const adminMessage = `🚨 <b>طلب سحب جديد يحتاج مراجعتك!</b>\n\n👤 <b>المستخدم:</b> <code>${userId}</code> (${userName})\n💰 <b>المبلغ:</b> <code>${withdrawAmount}</code> نقطة\n💳 <b>المحفظة:</b> <code>${wallet}</code>\n\nاختر الإجراء أدناه:`;
-
-      const inlineKeyboard = {
-        inline_keyboard: [
-          [
-            { text: "✅ موافقة على السحب", callback_data: `admin_w_ok_${userId}_${withdrawAmount}` },
-            { text: "❌ رفض وإرجاع الرصيد", callback_data: `admin_w_no_${userId}_${withdrawAmount}` }
-          ]
-        ]
-      };
-
-      try {
-        await fetch(apiUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: ADMIN_USER_ID,
-            text: adminMessage,
-            parse_mode: "HTML",
-            reply_markup: inlineKeyboard
-          })
-        });
-
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.sendData(JSON.stringify({
+          action: "withdraw",
+          amount: userPoints,
+          wallet: wallet
+        }));
         userPoints = 0;
         saveState();
         updateBalanceUI();
         closeWithdrawModal();
-        alert("🎉 تم تقديم طلب السحب بنجاح! سيتم فحص المحفظة والموافقة عليها من قبل الأدمن قريباً.");
-      } catch (err) {
-        alert("⚠️ تعذر إرسال طلب السحب للبوت، حاول مجدداً.");
+        alert("🎉 تم تقديم طلب السحب بنجاح! سيتم فحص المحفظة من قبل الأدمن قريباً.");
+      } else {
+        alert("⚠️ يرجى استخدام التطبيق من داخل تيليجرام لإتمام السحب.");
       }
     }
 
@@ -1810,4 +1824,3 @@
   </script>
 </body>
 </html>
-

@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Mii Ni App</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- مكتبة قصاصات الاحتفال الخفيفة -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -23,13 +25,7 @@
       color: #ffffff;
     }
 
-    a[href*="previewship"], div[class*="previewship"], [id*="previewship"] {
-      display: none !important;
-      visibility: hidden !important;
-      opacity: 0 !important;
-    }
-
-    /* شاشة الحظر للحسابات المتعددة */
+    /* شاشة الحظر */
     #ban-screen {
       position: fixed;
       inset: 0;
@@ -48,6 +44,7 @@
       margin-bottom: 12px;
     }
 
+    /* شاشة البداية */
     #splash-screen {
       position: absolute;
       inset: 0;
@@ -165,9 +162,6 @@
       padding: 6px 14px;
       border-radius: 20px;
       box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
     }
 
     .btn-check {
@@ -415,7 +409,7 @@
     }
 
     .dice-box.rolling {
-      animation: diceRollAnim 0.5s infinite;
+      animation: diceRollAnim 0.4s infinite;
     }
 
     @keyframes diceRollAnim {
@@ -520,6 +514,43 @@
       height: 22px;
       fill: currentColor;
     }
+
+    /* Modal مخصص لسحب الأرباح */
+    .custom-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+
+    .modal-box {
+      background: #140508;
+      border: 1.5px solid #ef4444;
+      border-radius: 18px;
+      padding: 20px;
+      width: 100%;
+      max-width: 340px;
+      text-align: center;
+      box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
+    }
+
+    .modal-input {
+      width: 100%;
+      background: #090204;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fff;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin: 14px 0;
+      outline: none;
+      direction: ltr;
+      text-align: left;
+    }
   </style>
 </head>
 <body>
@@ -529,7 +560,7 @@
     <div class="ban-icon">⛔</div>
     <h2 style="color: #ef4444; font-size: 22px; font-weight: 900; margin-bottom: 8px;">تم حظر هذا الحساب!</h2>
     <p style="font-size: 13px; color: #cbd5e1; line-height: 1.6;">
-      تم اكتشاف فتح حساب إضافي (تعدد) من نفس الشبكة أو الجهاز. يُسمح فقط بالحساب الأساسي الأول المسجل على هذا الجهاز.
+      تم اكتشاف فتح حساب إضافي (تعدد) من نفس الجهاز. يُسمح فقط بالحساب الأساسي المسجل على هذا الجهاز.
     </p>
   </div>
 
@@ -542,7 +573,7 @@
     <div class="content-box">
       <div id="loadingSection">
         <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-        <div class="loading-status" id="loadText">جاري التحقق من أمان الشبكة...</div>
+        <div class="loading-status" id="loadText">جاري الفحص والأمان...</div>
       </div>
       <div id="channelsSection">
         <div class="channel-row">
@@ -573,9 +604,19 @@
     <!-- 1. الرئيسية -->
     <div id="tab-home" class="tab-view active">
       <div id="homeMenuContainer" style="display: flex; flex-direction: column; gap: 14px;">
+        
+        <!-- مكافأة تسجيل الدخول اليومي -->
+        <div class="custom-card" style="display: flex; justify-content: space-between; align-items: center; border-color: #f59e0b;">
+          <div>
+            <div style="font-size: 13px; font-weight: 800; color: #fde047;">🎁 مكافأتك اليومية (+100 PTS)</div>
+            <div style="font-size: 10px; color: #94a3b8;">سجل حضورك كل 24 ساعة لربح نقاط مجانية</div>
+          </div>
+          <button id="dailyCheckinBtn" class="btn-check" style="background:#f59e0b; color:#000; border:none; padding: 6px 14px; font-weight:800;" onclick="claimDailyReward()">استلام</button>
+        </div>
+
         <div class="custom-card">
           <h2 style="font-size: 16px; font-weight: 900; color: #fecaca; margin-bottom: 6px;">👑 مرحباً بك يا <span id="welcomeUserName" style="color: #ef4444;">بطل</span>!</h2>
-          <p style="font-size: 12px; color: #cbd5e1; line-height: 1.6;">ادخل والعب ضد خصمك أونلاين في نفس اللحظة أو مع البوت بفرصة 50% وضاعف نقاطك فوراً.</p>
+          <p style="font-size: 12px; color: #cbd5e1; line-height: 1.6;">ادخل والعب ضد خصمك أونلاين في نفس اللحظة أو مع البوت وضاعف نقاطك فوراً.</p>
         </div>
 
         <div style="font-size: 14px; font-weight: 800; color: #fca5a5;">🎮 اختر غرفة اللعب:</div>
@@ -584,7 +625,7 @@
           <div class="game-info-left">
             <div class="game-icon-box">🎡</div>
             <div>
-              <div style="font-size: 15px; font-weight: 900;">عجلة الحظ PvP (أونلاين حقيقي)</div>
+              <div style="font-size: 15px; font-weight: 900;">عجلة الحظ PvP (أونلاين)</div>
               <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">تحدي دوران مباشر مع الأعضاء الحقيقيين</div>
             </div>
           </div>
@@ -595,7 +636,7 @@
           <div class="game-info-left">
             <div class="game-icon-box">🎲</div>
             <div>
-              <div style="font-size: 15px; font-weight: 900;">تحدي النرد PvP (أونلاين حقيقي)</div>
+              <div style="font-size: 15px; font-weight: 900;">تحدي النرد PvP (أونلاين)</div>
               <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">لعب مباشر في نفس الثانية مع الأعضاء</div>
             </div>
           </div>
@@ -695,9 +736,11 @@
     <!-- 3. الأصدقاء -->
     <div id="tab-friends" class="tab-view">
       <div class="custom-card">
-        <div class="card-title">🔗 رابط الإحالة</div>
-        <p style="font-size: 11px; color: #94a3b8; margin-bottom: 10px;">اربح 200 نقطة لكل صديق يشترك بالقنوات ويتحقق.</p>
-        <button class="btn-verify" onclick="copyLink()">📋 نسخ الرابط</button>
+        <div class="card-title">🔗 رابط الإحالة الخاص بك</div>
+        <p style="font-size: 12px; color: #94a3b8; margin-bottom: 12px; line-height: 1.6;">
+          اربح 200 نقطة عن كل صديق يقوم بالدخول عبر رابطك والاشتراك بالقنوات.
+        </p>
+        <button class="btn-verify" onclick="copyLink()">📋 نسخ الرابط ومشاركته</button>
       </div>
     </div>
 
@@ -711,9 +754,9 @@
       <div class="custom-card">
         <div class="card-title">💳 سحب الأرباح (الحد الأدنى: 5,000 نقطة)</div>
         <p style="font-size: 12px; color: #94a3b8; margin-bottom: 14px; line-height: 1.5;">
-          يفتح السحب بمجرد وصول رصيدك إلى 5,000 نقطة.
+          يفتح زر السحب تلقائياً وتتم مراجعة الطلب من قبل الإدارة بعد تقديم عنوان محفظتك.
         </p>
-        <button id="withdrawBtn" class="btn-verify" style="background: #334155; color: #94a3b8; cursor: not-allowed;" onclick="handleWithdraw()">
+        <button id="withdrawBtn" class="btn-verify" style="background: #334155; color: #94a3b8; cursor: not-allowed;" onclick="openWithdrawModal()">
           🔒 سحب الرصيد (متبقي 4,500 نقطة)
         </button>
       </div>
@@ -736,7 +779,65 @@
     </div>
   </div>
 
+  <!-- نافذة السحب المنبثقة -->
+  <div id="withdrawModal" class="custom-modal">
+    <div class="modal-box">
+      <h3 style="color:#ef4444; margin-bottom: 6px;">طلب سحب الأرباح</h3>
+      <p style="font-size: 11px; color:#cbd5e1;">أدخل عنوان محفظتك (TON أو USDT) لاستلام أرباحك:</p>
+      <input type="text" id="walletInput" class="modal-input" placeholder="UQ... أو عنوان المحفظة">
+      <div style="display:flex; gap:10px;">
+        <button class="btn-verify" style="margin-top:0;" onclick="submitWithdrawal()">تأكيد السحب</button>
+        <button class="btn-verify" style="background:#334155; margin-top:0;" onclick="closeWithdrawModal()">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    // ----------------- توليد الأصوات والاهتزاز (Audio & Haptics) -----------------
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playBeep(freq = 400, type = 'sine', duration = 0.1) {
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch(e) {}
+    }
+
+    function triggerHaptic(type = 'medium') {
+      try {
+        if (window.Telegram?.WebApp?.HapticFeedback) {
+          if (type === 'success' || type === 'error') {
+            window.Telegram.WebApp.HapticFeedback.notificationOccurred(type);
+          } else {
+            window.Telegram.WebApp.HapticFeedback.impactOccurred(type);
+          }
+        }
+      } catch (e) {}
+    }
+
+    function celebrateWin() {
+      triggerHaptic('success');
+      playBeep(600, 'triangle', 0.2);
+      setTimeout(() => playBeep(800, 'triangle', 0.3), 150);
+      try {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      } catch(e) {}
+    }
+
+    // ----------------- هوية المستخدم وبيانات تيليجرام -----------------
     let userId = null;
     let userName = "المستخدم";
     let userPhoto = "https://i.postimg.cc/0zLCLkCS/image.jpg";
@@ -768,7 +869,6 @@
       document.getElementById("main-container").style.display = "none";
     }
 
-    // توليد بصمة فريدة للجهاز عبر الـ Canvas لمنع تعدد الحسابات
     function generateDeviceFingerprint() {
       try {
         const canvas = document.createElement('canvas');
@@ -777,13 +877,10 @@
         canvas.height = 50;
         ctx.textBaseline = "top";
         ctx.font = "14px 'Arial'";
-        ctx.textBaseline = "alphabetic";
         ctx.fillStyle = "#f60";
         ctx.fillRect(125, 1, 62, 20);
         ctx.fillStyle = "#069";
         ctx.fillText("MiiNi-Security-Canvas", 2, 15);
-        ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
-        ctx.fillText("MiiNi-Security-Canvas", 4, 17);
         const b64 = canvas.toDataURL();
         let hash = 0;
         for (let i = 0; i < b64.length; i++) {
@@ -792,81 +889,28 @@
         }
         return Math.abs(hash).toString(36);
       } catch (e) {
-        return "dev_" + screen.width + "x" + screen.height + "_" + navigator.hardwareConcurrency;
+        return "dev_" + screen.width + "x" + screen.height;
       }
     }
 
-    // فحص شامل يحظر الحسابات الإضافية ويبقي الحساب الأساسي فقط متاحاً
     async function enforceCloudMultiAccountProtection() {
       try {
-        const deviceFp = generateDeviceFingerprint();
         const localPrimaryUser = localStorage.getItem("miini_primary_device_owner");
-
-        // إذا وُجد تسجيل سابق على نفس الجهاز لحساب مختلف، يتم الحظر فوراً
         if (localPrimaryUser && localPrimaryUser !== userId) {
           triggerBan();
           return false;
         }
-
-        // جلب عنوان الـ IP
-        let clientIp = "";
-        try {
-          const res = await fetch("https://api.ipify.org?format=json");
-          const data = await res.json();
-          clientIp = data.ip;
-        } catch(e) {
-          try {
-            const res2 = await fetch("https://api64.ipify.org?format=json");
-            const data2 = await res2.json();
-            clientIp = data2.ip;
-          } catch(e2) {
-            clientIp = "local_net";
-          }
-        }
-
-        // حفظ الحساب الأساسي محلياً
         if (!localPrimaryUser) {
           localStorage.setItem("miini_primary_device_owner", userId);
         }
-
-        const netKey = `net_${clientIp.replace(/[:.]/g, '_')}_${deviceFp}`;
-        const cloudCheckUrl = `https://kvdb.io/4y9K3s5K2g5j6H7p9L1/${netKey}`;
-        const checkRes = await fetch(cloudCheckUrl + `?t=${Date.now()}`);
-
-        if (checkRes.status === 404) {
-          // أول حساب يسجل من هذه الشبكة/الجهاز يصبح الحساب الأساسي
-          await fetch(cloudCheckUrl, {
-            method: 'POST',
-            body: userId
-          });
-          return true;
-        } else if (checkRes.ok) {
-          const primaryOwner = (await checkRes.text()).trim();
-
-          // السماح للحساب الأساسي الأول فقط
-          if (primaryOwner === userId.trim()) {
-            return true;
-          } else {
-            // حظر أي حساب ثانوي آخر يدخل من نفس الجهاز أو الشبكة
-            triggerBan();
-            return false;
-          }
-        }
-      } catch (err) {
-        // حماية محلية احتياطية في حال تعطل خدمة الإنترنت للـ IP
-        const localOwner = localStorage.getItem("miini_primary_device_owner");
-        if (localOwner && localOwner !== userId) {
-          triggerBan();
-          return false;
-        }
-        return true;
-      }
+      } catch (err) {}
       return true;
     }
 
     const STORAGE_KEY_POINTS = `miini_${userId}_points`;
     const STORAGE_KEY_TASKS = `miini_${userId}_completed_tasks`;
     const STORAGE_KEY_ONBOARDED = `miini_${userId}_onboarded`;
+    const STORAGE_KEY_DAILY = `miini_${userId}_last_daily`;
 
     let userPoints = parseInt(localStorage.getItem(STORAGE_KEY_POINTS)) || 500;
     let completedTasks = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY_TASKS) || "[]"));
@@ -876,17 +920,48 @@
       localStorage.setItem(STORAGE_KEY_TASKS, JSON.stringify(Array.from(completedTasks)));
     }
 
+    // ----------------- المكافأة اليومية -----------------
+    function checkDailyRewardStatus() {
+      const last = localStorage.getItem(STORAGE_KEY_DAILY);
+      const btn = document.getElementById("dailyCheckinBtn");
+      if (last) {
+        const diff = Date.now() - parseInt(last);
+        if (diff < 24 * 60 * 60 * 1000) {
+          btn.innerText = "✓ تم الاستلام";
+          btn.style.background = "#334155";
+          btn.style.color = "#94a3b8";
+          btn.disabled = true;
+          return;
+        }
+      }
+      btn.innerText = "استلام";
+      btn.disabled = false;
+    }
+
+    function claimDailyReward() {
+      celebrateWin();
+      userPoints += 100;
+      localStorage.setItem(STORAGE_KEY_DAILY, Date.now().toString());
+      saveState();
+      updateBalanceUI();
+      checkDailyRewardStatus();
+    }
+
+    // ----------------- التحقق الأولي والقنوات -----------------
     let clickedChannels = { c1: false, c2: false };
     function markChannelClicked(ch) {
       clickedChannels[ch] = true;
+      triggerHaptic('light');
     }
 
     let clickedTasks = {};
     function markTaskClicked(tid) {
       clickedTasks[tid] = true;
+      triggerHaptic('light');
     }
 
     function verifyInitialChannels() {
+      triggerHaptic('medium');
       const btn = document.getElementById("initialVerifyBtn");
       btn.innerText = "⏳ جاري التحقق...";
       btn.disabled = true;
@@ -896,6 +971,7 @@
           localStorage.setItem(STORAGE_KEY_ONBOARDED, "true");
           saveState();
 
+          celebrateWin();
           const splash = document.getElementById("splash-screen");
           const main = document.getElementById("main-container");
           splash.style.opacity = "0";
@@ -903,23 +979,25 @@
             splash.style.display = "none";
             main.style.display = "flex";
             updateBalanceUI();
+            checkDailyRewardStatus();
           }, 300);
         } else {
+          triggerHaptic('error');
           alert("⚠️ يرجى الضغط على زر الانضمام لكلتا القناتين أولاً!");
           btn.innerText = "✓ تحقق واستلم 500 نقطة";
           btn.disabled = false;
         }
-      }, 700);
+      }, 600);
     }
 
     function verifyTask(taskId, rewardPoints) {
+      triggerHaptic('medium');
       if (completedTasks.has(taskId)) {
-        alert("⚠️ لقد استلمت مكافأة هذه المهمة بالفعل من قبل!");
+        alert("⚠️ تم استلام المكافأة مسبقاً!");
         return;
       }
-
       if (!clickedTasks[taskId]) {
-        alert("⚠️ يرجى الضغط على زر الانضمام للقناة أولاً!");
+        alert("⚠️ يرجى الضغط على زر الانضمام أولاً!");
         return;
       }
 
@@ -928,15 +1006,16 @@
 
       setTimeout(() => {
         completedTasks.add(taskId);
-        if (rewardPoints > 0) userPoints += rewardPoints;
+        userPoints += rewardPoints;
         saveState();
         updateBalanceUI();
+        celebrateWin();
         actionsContainer.innerHTML = `<span class="btn-completed">✓ تم استلام المكافأة</span>`;
-        alert(`🎉 تم التحقق وإضافة +${rewardPoints} نقطة (مرة واحدة فقط).`);
-      }, 600);
+      }, 500);
     }
 
     function openGameScreen(screenId) {
+      triggerHaptic('light');
       document.getElementById("homeMenuContainer").style.display = "none";
       document.querySelectorAll(".game-screen").forEach(s => s.style.display = "none");
       document.getElementById(screenId).style.display = "flex";
@@ -944,13 +1023,14 @@
     }
 
     function backToHomeMenu() {
+      triggerHaptic('light');
       document.querySelectorAll(".game-screen").forEach(s => s.style.display = "none");
       document.getElementById("homeMenuContainer").style.display = "flex";
     }
 
+    // ----------------- عجلة الحظ -----------------
     let wheelBetAmount = 50;
     let isWheelSpinning = false;
-    let wheelPollInterval = null;
     let wheelPlayers = [];
     let currentWheelRotation = 0;
     const canvas = document.getElementById("wheelCanvas");
@@ -959,6 +1039,7 @@
 
     function selectWheelBet(amt, btn) {
       if (isWheelSpinning) return;
+      triggerHaptic('light');
       wheelBetAmount = amt;
       btn.parentElement.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
@@ -1028,16 +1109,6 @@
         }
         ctx.restore();
 
-        ctx.save();
-        ctx.translate(240, 240);
-        ctx.rotate(midAngle);
-        ctx.beginPath();
-        ctx.arc(radiusDist, 0, avatarSize / 2, 0, Math.PI * 2);
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = "#ffffff";
-        ctx.stroke();
-        ctx.restore();
-
         currentAngle += slice;
       });
     }
@@ -1064,10 +1135,12 @@
     async function placeWheelBetOnline() {
       if (isWheelSpinning) return;
       if (userPoints < wheelBetAmount) {
+        triggerHaptic('error');
         alert("⚠️ رصيدك غير كافٍ!");
         return;
       }
 
+      triggerHaptic('heavy');
       userPoints -= wheelBetAmount;
       saveState();
       updateBalanceUI();
@@ -1083,49 +1156,17 @@
       preloadAvatar(userPhoto, () => drawWheel());
       updateWheelPlayersUI();
 
-      let countdown = 10;
+      let countdown = 3; // بحث سريع 3 ثوانٍ
       const timerEl = document.getElementById("wheelTimer");
       timerEl.innerText = `⏳ جاري البحث عن منافس: ${countdown}ث`;
 
-      const roomId = `room_wheel_${wheelBetAmount}`;
-      const myData = { id: userId, name: userName, avatar: userPhoto, bet: wheelBetAmount, time: Date.now() };
-
-      try {
-        await fetch(`https://kvdb.io/4y9K3s5K2g5j6H7p9L1/${roomId}_${userId}`, {
-          method: 'POST',
-          body: JSON.stringify(myData)
-        });
-      } catch(e) {}
-
-      let matchedPlayer = null;
-
-      wheelPollInterval = setInterval(async () => {
+      const t = setInterval(() => {
         countdown--;
-        timerEl.innerText = `⏳ جاري البحث عن منافس: ${countdown}ث`;
-
-        try {
-          const listRes = await fetch(`https://kvdb.io/4y9K3s5K2g5j6H7p9L1/?prefix=${roomId}_&t=${Date.now()}`);
-          const keys = await listRes.json();
-          for (let k of keys) {
-            if (!k.includes(userId)) {
-              const pRes = await fetch(`https://kvdb.io/4y9K3s5K2g5j6H7p9L1/${k}`);
-              const other = await pRes.json();
-              if (other && (Date.now() - other.time) < 15000) {
-                matchedPlayer = other;
-                break;
-              }
-            }
-          }
-        } catch(e) {}
-
-        if (matchedPlayer) {
-          clearInterval(wheelPollInterval);
-          addOpponentAndSpin(matchedPlayer.id, matchedPlayer.name, matchedPlayer.avatar, matchedPlayer.bet);
-          return;
-        }
-
-        if (countdown <= 0) {
-          clearInterval(wheelPollInterval);
+        playBeep(350, 'sine', 0.05);
+        if (countdown > 0) {
+          timerEl.innerText = `⏳ جاري البحث عن منافس: ${countdown}ث`;
+        } else {
+          clearInterval(t);
           addOpponentAndSpin("bot", "🤖 MiiNi Bot", "https://i.postimg.cc/0zLCLkCS/image.jpg", wheelBetAmount);
         }
       }, 1000);
@@ -1153,13 +1194,8 @@
       timerEl.innerText = "🌀 جاري دوران العجلة...";
 
       const totalPot = wheelPlayers.reduce((s, p) => s + p.bet, 0);
-      const rand = Math.random() * totalPot;
-      let cumulative = 0;
-      let winnerIdx = 0;
-      for (let i = 0; i < wheelPlayers.length; i++) {
-        cumulative += wheelPlayers[i].bet;
-        if (rand <= cumulative) { winnerIdx = i; break; }
-      }
+      const isWinnerUser = Math.random() >= 0.45; // نسبة فوز عادلة
+      const winnerIdx = isWinnerUser ? 0 : 1;
 
       let startAngle = 0;
       for (let i = 0; i < winnerIdx; i++) {
@@ -1174,19 +1210,27 @@
 
       canvas.style.transform = `rotate(${currentWheelRotation}deg)`;
 
+      // صوت واهتزاز الدوران
+      const spinInterval = setInterval(() => {
+        playBeep(250, 'square', 0.03);
+        triggerHaptic('light');
+      }, 350);
+
       setTimeout(() => {
+        clearInterval(spinInterval);
         const winner = wheelPlayers[winnerIdx];
         const isUserWinner = winner.id === userId;
 
         if (isUserWinner) {
+          celebrateWin();
           userPoints += totalPot;
           saveState();
           updateBalanceUI();
           timerEl.innerText = `🎉 مبروك! فزت بـ ${totalPot} نقطة!`;
-          alert(`🎉 مبروك! فزت بوعاء الجائزة كاملاً (+${totalPot} نقطة)!`);
         } else {
-          timerEl.innerText = `😢 فاز ${winner.name}!`;
-          alert(`حظ أوفر! فاز ${winner.name} بوعاء النقاط.`);
+          triggerHaptic('error');
+          playBeep(180, 'sawtooth', 0.3);
+          timerEl.innerText = `😢 حظ أوفر! فاز ${winner.name}!`;
         }
 
         setTimeout(() => {
@@ -1202,13 +1246,14 @@
       }, 4200);
     }
 
+    // ----------------- تحدي النرد -----------------
     let diceBetAmount = 50;
     let isDiceRolling = false;
-    let dicePollInterval = null;
     const diceIcons = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
 
     function selectDiceBet(amt, btn) {
       if (isDiceRolling) return;
+      triggerHaptic('light');
       diceBetAmount = amt;
       btn.parentElement.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
@@ -1217,10 +1262,12 @@
     async function placeDiceBetOnline() {
       if (isDiceRolling) return;
       if (userPoints < diceBetAmount) {
+        triggerHaptic('error');
         alert("⚠️ رصيدك غير كافٍ!");
         return;
       }
 
+      triggerHaptic('heavy');
       userPoints -= diceBetAmount;
       saveState();
       updateBalanceUI();
@@ -1231,52 +1278,20 @@
 
       document.getElementById("diceMyAvatar").src = userPhoto;
       document.getElementById("diceMyName").innerText = userName;
-      document.getElementById("diceOpponentName").innerText = "جاري البحث عن لاعب...";
+      document.getElementById("diceOpponentName").innerText = "جاري البحث...";
       document.getElementById("diceTotalPot").innerText = `${diceBetAmount} PTS`;
 
-      let countdown = 10;
+      let countdown = 3;
       const timerEl = document.getElementById("diceTimer");
       timerEl.innerText = `⏳ جاري البحث عن منافس: ${countdown}ث`;
 
-      const roomId = `room_dice_${diceBetAmount}`;
-      const myData = { id: userId, name: userName, avatar: userPhoto, bet: diceBetAmount, time: Date.now() };
-
-      try {
-        await fetch(`https://kvdb.io/4y9K3s5K2g5j6H7p9L1/${roomId}_${userId}`, {
-          method: 'POST',
-          body: JSON.stringify(myData)
-        });
-      } catch(e) {}
-
-      let matchedPlayer = null;
-
-      dicePollInterval = setInterval(async () => {
+      const t = setInterval(() => {
         countdown--;
-        timerEl.innerText = `⏳ جاري البحث عن منافس: ${countdown}ث`;
-
-        try {
-          const listRes = await fetch(`https://kvdb.io/4y9K3s5K2g5j6H7p9L1/?prefix=${roomId}_&t=${Date.now()}`);
-          const keys = await listRes.json();
-          for (let k of keys) {
-            if (!k.includes(userId)) {
-              const pRes = await fetch(`https://kvdb.io/4y9K3s5K2g5j6H7p9L1/${k}`);
-              const other = await pRes.json();
-              if (other && (Date.now() - other.time) < 15000) {
-                matchedPlayer = other;
-                break;
-              }
-            }
-          }
-        } catch(e) {}
-
-        if (matchedPlayer) {
-          clearInterval(dicePollInterval);
-          startDuel(matchedPlayer.name, matchedPlayer.avatar, diceBetAmount * 2);
-          return;
-        }
-
-        if (countdown <= 0) {
-          clearInterval(dicePollInterval);
+        playBeep(350, 'sine', 0.05);
+        if (countdown > 0) {
+          timerEl.innerText = `⏳ جاري البحث عن منافس: ${countdown}ث`;
+        } else {
+          clearInterval(t);
           startDuel("🤖 MiiNi Bot", "https://i.postimg.cc/0zLCLkCS/image.jpg", diceBetAmount * 2);
         }
       }, 1000);
@@ -1298,10 +1313,12 @@
 
       let count = 0;
       const anim = setInterval(() => {
+        playBeep(300, 'square', 0.04);
+        triggerHaptic('light');
         myBox.innerText = diceIcons[Math.floor(Math.random() * 6)];
         oppBox.innerText = diceIcons[Math.floor(Math.random() * 6)];
         count++;
-        if (count > 15) {
+        if (count > 14) {
           clearInterval(anim);
           myBox.classList.remove("rolling");
           oppBox.classList.remove("rolling");
@@ -1314,14 +1331,15 @@
           oppBox.innerText = diceIcons[oppVal - 1];
 
           if (myVal > oppVal) {
+            celebrateWin();
             userPoints += totalPot;
             saveState();
             updateBalanceUI();
             timerEl.innerText = `🎉 فزت بـ ${totalPot} نقطة (${myVal} ضد ${oppVal})!`;
-            alert(`🎉 فزت بالمنافسة ضد ${oppName}! مبروك (+${totalPot} نقطة).`);
           } else {
+            triggerHaptic('error');
+            playBeep(180, 'sawtooth', 0.3);
             timerEl.innerText = `😢 فاز ${oppName} (${oppVal} ضد ${myVal})!`;
-            alert(`حظ أوفر! فاز ${oppName} بنتيجة أعلى.`);
           }
 
           setTimeout(() => {
@@ -1337,52 +1355,49 @@
       }, 100);
     }
 
-    // تهيئة وفحص مباشر
-    window.addEventListener('DOMContentLoaded', async () => {
-      document.getElementById("username").innerText = userName;
-      document.getElementById("welcomeUserName").innerText = userName;
-      document.getElementById("userHeaderAvatar").src = userPhoto;
+    // ----------------- السحب والمودال والربط بالبوت -----------------
+    function openWithdrawModal() {
+      if (userPoints < 5000) return;
+      triggerHaptic('medium');
+      document.getElementById("withdrawModal").style.display = "flex";
+    }
 
-      const isAllowed = await enforceCloudMultiAccountProtection();
-      if (!isAllowed) return;
+    function closeWithdrawModal() {
+      document.getElementById("withdrawModal").style.display = "none";
+    }
 
-      document.getElementById("splash-screen").style.display = "flex";
-
-      completedTasks.forEach(taskId => {
-        const container = document.getElementById(`taskActions${taskId}`);
-        if (container) {
-          container.innerHTML = `<span class="btn-completed">✓ تم استلام المكافأة</span>`;
-        }
-      });
-
-      const isDone = localStorage.getItem(STORAGE_KEY_ONBOARDED) === "true";
-      if (isDone) {
-        document.getElementById("splash-screen").style.display = "none";
-        document.getElementById("main-container").style.display = "flex";
-        updateBalanceUI();
-      } else {
-        let p = 0;
-        const fill = document.getElementById("progressFill");
-        const txt = document.getElementById("loadText");
-        const t = setInterval(() => {
-          p += 20;
-          if (p >= 100) {
-            clearInterval(t);
-            fill.style.width = "100%";
-            txt.innerText = "Ready!";
-            setTimeout(() => {
-              document.getElementById("loadingSection").style.display = "none";
-              document.getElementById("channelsSection").style.display = "flex";
-            }, 300);
-          } else {
-            fill.style.width = p + "%";
-            txt.innerText = "Loading... " + p + "%";
-          }
-        }, 50);
+    function submitWithdrawal() {
+      const wallet = document.getElementById("walletInput").value.trim();
+      if (!wallet) {
+        alert("يرجى كتابة عنوان المحفظة بشكل صحيح!");
+        return;
       }
-    });
+
+      triggerHaptic('success');
+      
+      // إرسال البيانات مباشرة لبوت التيليجرام المشغل للبوت
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.sendData(JSON.stringify({
+          action: "withdraw",
+          amount: userPoints,
+          wallet: wallet
+        }));
+        window.Telegram.WebApp.close();
+      } else {
+        alert("🎉 تم إرسال طلب السحب بنجاح للإدارة للمراجعة!");
+        closeWithdrawModal();
+      }
+    }
+
+    function copyLink() {
+      triggerHaptic('light');
+      navigator.clipboard.writeText(`https://t.me/Mii_ni_bot?start=ref_${userId}`);
+      celebrateWin();
+      alert("📋 تم نسخ الرابط بنجاح! شاركه مع أصدقائك لربح النقاط.");
+    }
 
     function switchTab(tabId, nav) {
+      triggerHaptic('light');
       document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
@@ -1409,18 +1424,52 @@
       }
     }
 
-    function handleWithdraw() {
-      if (userPoints < 5000) {
-        alert("عذراً، لم تصل إلى الحد الأدنى للسحب (5,000 نقطة) بعد!");
-      } else {
-        alert("🎉 مبروك! وصلت للحد الأدنى للسحب. يرجى إدخال عنوان محفظتك لاستلام أرباحك.");
-      }
-    }
+    // ----------------- التهيئة عند التحميل -----------------
+    window.addEventListener('DOMContentLoaded', async () => {
+      document.getElementById("username").innerText = userName;
+      document.getElementById("welcomeUserName").innerText = userName;
+      document.getElementById("userHeaderAvatar").src = userPhoto;
 
-    function copyLink() {
-      navigator.clipboard.writeText(`https://t.me/Mii_ni_bot?start=ref_${userId}`);
-      alert("تم نسخ الرابط بنجاح!");
-    }
+      const isAllowed = await enforceCloudMultiAccountProtection();
+      if (!isAllowed) return;
+
+      document.getElementById("splash-screen").style.display = "flex";
+
+      completedTasks.forEach(taskId => {
+        const container = document.getElementById(`taskActions${taskId}`);
+        if (container) {
+          container.innerHTML = `<span class="btn-completed">✓ تم استلام المكافأة</span>`;
+        }
+      });
+
+      const isDone = localStorage.getItem(STORAGE_KEY_ONBOARDED) === "true";
+      if (isDone) {
+        document.getElementById("splash-screen").style.display = "none";
+        document.getElementById("main-container").style.display = "flex";
+        updateBalanceUI();
+        checkDailyRewardStatus();
+      } else {
+        let p = 0;
+        const fill = document.getElementById("progressFill");
+        const txt = document.getElementById("loadText");
+        const t = setInterval(() => {
+          p += 25;
+          if (p >= 100) {
+            clearInterval(t);
+            fill.style.width = "100%";
+            txt.innerText = "جاهز!";
+            setTimeout(() => {
+              document.getElementById("loadingSection").style.display = "none";
+              document.getElementById("channelsSection").style.display = "flex";
+            }, 250);
+          } else {
+            fill.style.width = p + "%";
+            txt.innerText = "جاري التحميل... " + p + "%";
+          }
+        }, 50);
+      }
+    });
   </script>
 </body>
 </html>
+

@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Mii Ni App</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #060204;
+      color: #ffffff;
+    }
+
+    #splash-screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding-bottom: 35px;
+      background: 
+        linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(10,2,4,0.75) 55%, #050102 100%),
+        url('https://i.postimg.cc/0zLCLkCS/image.jpg') no-repeat center center;
+      background-size: cover;
+      z-index: 50;
+    }
+
+    .branding {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .app-name {
+      font-size: 42px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      color: #ffffff;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px rgba(255, 30, 30, 0.9), 0 0 35px rgba(220, 20, 60, 0.6);
+    }
+
+    .app-slogan {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 6px;
+      color: #ffb4b4;
+      opacity: 0.85;
+      margin-top: 4px;
+    }
+
+    .content-box {
+      width: 86%;
+      max-width: 330px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #channelsSection {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .channel-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(17, 8, 11, 0.9);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      padding: 10px 14px;
+      border-radius: 12px;
+    }
+
+    .channel-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    .btn-join {
+      background: #ef4444;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 20px;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+    }
+
+    .btn-check {
+      background: #1e293b;
+      border: 1px solid #ef4444;
+      color: #fca5a5;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    .btn-completed {
+      background: rgba(34, 197, 94, 0.15) !important;
+      border: 1px solid #22c55e !important;
+      color: #4ade80 !important;
+      font-size: 11px !important;
+      font-weight: 800 !important;
+      padding: 6px 12px !important;
+      border-radius: 20px !important;
+      cursor: default !important;
+      pointer-events: none;
+    }
+
+    .btn-verify {
+      width: 100%;
+      background: linear-gradient(90deg, #b91c1c, #ef4444);
+      color: #ffffff;
+      border: none;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 0 18px rgba(239, 68, 68, 0.5);
+      margin-top: 4px;
+    }
+
+    #main-container {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      background: radial-gradient(circle at top, #18060a 0%, #060204 100%);
+      padding: 16px 16px 75px;
+      overflow-y: auto;
+      z-index: 10;
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(22, 10, 15, 0.85);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 10px 14px;
+      border-radius: 14px;
+      margin-bottom: 14px;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid #ef4444;
+      object-fit: cover;
+    }
+
+    .user-name {
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .points-badge {
+      background: linear-gradient(90deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.05));
+      border: 1px solid #ef4444;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #fca5a5;
+    }
+
+    .tab-view {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .tab-view.active {
+      display: flex;
+    }
+
+    .custom-card {
+      background: rgba(18, 7, 11, 0.85);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #fca5a5;
+      margin-bottom: 8px;
+    }
+
+    .promo-input-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .promo-input {
+      flex: 1;
+      background: #0d0407;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      outline: none;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .promo-btn {
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      padding: 0 16px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .game-selection-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(135deg, rgba(28, 10, 15, 0.95), rgba(16, 5, 8, 0.95));
+      border: 1.5px solid rgba(239, 68, 68, 0.4);
+      border-radius: 16px;
+      padding: 16px;
+      cursor: pointer;
+    }
+
+    .game-info-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .game-icon-box {
+      font-size: 32px;
+      width: 50px;
+      height: 50px;
+      background: rgba(239, 68, 68, 0.12);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .game-btn-play {
+      background: #ef4444;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+
+    .game-screen {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .game-back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #cbd5e1;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      width: fit-content;
+    }
+
+    .wheel-arena {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .wheel-wrapper {
+      position: relative;
+      width: 240px;
+      height: 240px;
+      margin: 10px auto;
+    }
+
+    .wheel-arrow {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0; 
+      height: 0; 
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-top: 18px solid #facc15;
+      z-index: 10;
+      filter: drop-shadow(0 2px 5px rgba(250, 204, 21, 0.8));
+    }
+
+    #wheelCanvas {
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      border: 3px solid #ef4444;
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+      transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1);
+    }
+
+    .dice-arena {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 10px;
+    }
+
+    .dice-duel-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      width: 100%;
+      margin: 16px 0;
+    }
+
+    .dice-player-side {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dice-box {
+      width: 75px;
+      height: 75px;
+      background: #ffffff;
+      color: #060204;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      font-weight: 900;
+      box-shadow: 0 0 18px rgba(255, 255, 255, 0.25);
+    }
+
+    .dice-box.rolling {
+      animation: diceRollAnim 0.4s infinite;
+    }
+
+    @keyframes diceRollAnim {
+      0% { transform: rotate(0deg); }
+      50% { transform: rotate(180deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .timer-badge {
+      font-size: 14px;
+      font-weight: 900;
+      color: #fde047;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid #f59e0b;
+      padding: 4px 16px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+    }
+
+    .bet-selector {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin: 10px 0;
+    }
+
+    .bet-btn {
+      background: #1e1014;
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      color: #fca5a5;
+      padding: 6px 14px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .bet-btn.active {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .players-list {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .player-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+    }
+
+    .player-avatar-small {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+      vertical-align: middle;
+      margin-left: 6px;
+      border: 1px solid #fff;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 65px;
+      background: rgba(10, 3, 6, 0.95);
+      border-top: 1px solid rgba(239, 68, 68, 0.25);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 40;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: #64748b;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .nav-item.active {
+      color: #ef4444;
+    }
+
+    .nav-item svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
+
+    .custom-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+
+    .modal-box {
+      background: #140508;
+      border: 1.5px solid #ef4444;
+      border-radius: 18px;
+      padding: 20px;
+      width: 100%;
+      max-width: 340px;
+      text-align: center;
+      box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
+    }
+
+    .modal-input {
+      width: 100%;
+      background: #090204;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fff;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin: 14px 0;
+      outline: none;
+      direction: ltr;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- شاشة الاشتراك الإجباري -->
+  <div id="splash-screen">
+    <div class="branding">
+      <h1 class="app-name">MII NI</h1>
+      <div class="app-slogan">CONTESTS • REWARDS • PROMO</div>
+    </div>
+    <div class="content-box">
+      <div id="channelsSection">
+        <div id="splashChannelsList" style="display: flex; flex-direction: column; gap: 8px; width: 100%;"></div>
+        <button id="initialVerifyBtn" class="btn-verify" onclick="verifyInitialChannels()">✓ تحقق والدخول للتطبيق</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="main-container">
+    <div class="user-card">
+      <div class="user-info">
+        <img src="https://i.postimg.cc/0zLCLkCS/image.jpg" id="userHeaderAvatar" class="user-avatar">
+        <div>
+          <div class="user-name" id="username">المستخدم</div>
+          <div style="font-size: 11px; color: #94a3b8;">إحالاتك: <span id="refCountHeader">0</span></div>
+        </div>
+      </div>
+      <div class="points-badge" id="pointsVal">💎 500 PTS</div>
+    </div>
+
+    <!-- 1. الرئيسية مع الألعاب كاملة -->
+    <div id="tab-home" class="tab-view active">
+      <div id="homeMenuContainer" style="display: flex; flex-direction: column; gap: 14px;">
+        
+        <div class="custom-card" style="display: flex; justify-content: space-between; align-items: center; border-color: #f59e0b;">
+          <div>
+            <div style="font-size: 13px; font-weight: 800; color: #fde047;">🎁 مكافأتك اليومية (+100 PTS)</div>
+            <div style="font-size: 10px; color: #94a3b8;">سجل حضورك كل 24 ساعة لربح نقاط مجانية</div>
+          </div>
+          <button id="dailyCheckinBtn" class="btn-check" style="background:#f59e0b; color:#000; border:none; padding: 6px 14px; font-weight:800;" onclick="claimDailyReward()">استلام</button>
+        </div>
+
+        <!-- خانة البرومو كود -->
+        <div class="custom-card" style="border-color: #a855f7;">
+          <div class="card-title" style="color: #c084fc; margin-bottom: 4px;">🎟️ كود الهدية (Promo Code)</div>
+          <p style="font-size: 11px; color: #94a3b8;">أدخل كود المكافأة لشحن رصيد إضافي فوراً:</p>
+          <div class="promo-input-group">
+            <input type="text" id="promoInputMain" class="promo-input" placeholder="اكتب الكود هنا...">
+            <button class="promo-btn" style="background:#a855f7;" onclick="redeemPromoCode()">تفعيل</button>
+          </div>
+        </div>
+
+        <div class="custom-card">
+          <h2 style="font-size: 16px; font-weight: 900; color: #fecaca; margin-bottom: 6px;">👑 مرحباً بك يا <span id="welcomeUserName" style="color: #ef4444;">بطل</span>!</h2>
+          <p style="font-size: 12px; color: #cbd5e1; line-height: 1.6;">ادخل والعب ضد خصمك أونلاين في نفس اللحظة أو مع البوت وضاعف نقاطك فوراً.</p>
+        </div>
+
+        <div style="font-size: 14px; font-weight: 800; color: #fca5a5;">🎮 اختر غرفة اللعب:</div>
+
+        <div class="game-selection-card" onclick="openGameScreen('wheelScreen')">
+          <div class="game-info-left">
+            <div class="game-icon-box">🎡</div>
+            <div>
+              <div style="font-size: 15px; font-weight: 900;">عجلة الحظ PvP (أونلاين)</div>
+              <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">تحدي دوران مباشر مع الأعضاء الحقيقيين</div>
+            </div>
+          </div>
+          <div class="game-btn-play">دخول ➔</div>
+        </div>
+
+        <div class="game-selection-card" onclick="openGameScreen('diceScreen')">
+          <div class="game-info-left">
+            <div class="game-icon-box">🎲</div>
+            <div>
+              <div style="font-size: 15px; font-weight: 900;">تحدي النرد PvP (أونلاين)</div>
+              <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">لعب مباشر في نفس الثانية مع الأعضاء</div>
+            </div>
+          </div>
+          <div class="game-btn-play">دخول ➔</div>
+        </div>
+      </div>
+
+      <!-- واجهة العجلة -->
+      <div id="wheelScreen" class="game-screen">
+        <button class="game-back-btn" onclick="backToHomeMenu()">➔ العودة للألعاب</button>
+        <div class="custom-card wheel-arena">
+          <div class="card-title" style="font-size: 16px;">🎡 عجلة الحظ التنافسية (Live PvP)</div>
+          <div class="timer-badge" id="wheelTimer">⏳ في انتظار وضع الرهان</div>
+
+          <div class="wheel-wrapper">
+            <div class="wheel-arrow"></div>
+            <canvas id="wheelCanvas" width="480" height="480"></canvas>
+          </div>
+
+          <div style="font-size: 12px; color: #cbd5e1; margin-top: 5px;">
+            إجمالي الجائزة (Pot): <b id="totalPot" style="color: #4ade80;">0 PTS</b>
+          </div>
+
+          <div class="bet-selector">
+            <button class="bet-btn active" onclick="selectWheelBet(50, this)">50</button>
+            <button class="bet-btn" onclick="selectWheelBet(100, this)">100</button>
+            <button class="bet-btn" onclick="selectWheelBet(250, this)">250</button>
+            <button class="bet-btn" onclick="selectWheelBet(500, this)">500</button>
+          </div>
+
+          <button id="joinWheelBtn" class="btn-verify" onclick="placeWheelBetOnline()">
+            🎯 دخول التحدي والبحث عن منافس
+          </button>
+
+          <div class="players-list" id="playersContainer"></div>
+        </div>
+      </div>
+
+      <!-- واجهة النرد -->
+      <div id="diceScreen" class="game-screen">
+        <button class="game-back-btn" onclick="backToHomeMenu()">➔ العودة للألعاب</button>
+        <div class="custom-card dice-arena">
+          <div class="card-title" style="font-size: 16px;">🎲 تحدي النرد التنافسي (Live PvP)</div>
+          <div class="timer-badge" id="diceTimer">⏳ في انتظار وضع الرهان</div>
+
+          <div class="dice-duel-box">
+            <div class="dice-player-side">
+              <img src="https://i.postimg.cc/0zLCLkCS/image.jpg" id="diceMyAvatar" class="user-avatar">
+              <span style="font-size: 12px; font-weight: 800;" id="diceMyName">أنت</span>
+              <div class="dice-box" id="myDiceBox">🎲</div>
+            </div>
+
+            <div style="font-size: 18px; font-weight: 900; color: #ef4444;">VS</div>
+
+            <div class="dice-player-side">
+              <img src="https://i.postimg.cc/0zLCLkCS/image.jpg" id="diceOpponentAvatar" class="user-avatar" style="border-color: #3b82f6;">
+              <span style="font-size: 12px; font-weight: 800;" id="diceOpponentName">في الانتظار...</span>
+              <div class="dice-box" id="opponentDiceBox">🎲</div>
+            </div>
+          </div>
+
+          <div style="font-size: 12px; color: #cbd5e1; margin-bottom: 8px;">
+            مجموع الجائزة: <b id="diceTotalPot" style="color: #4ade80;">0 PTS</b>
+          </div>
+
+          <div class="bet-selector">
+            <button class="bet-btn active" onclick="selectDiceBet(50, this)">50</button>
+            <button class="bet-btn" onclick="selectDiceBet(100, this)">100</button>
+            <button class="bet-btn" onclick="selectDiceBet(250, this)">250</button>
+            <button class="bet-btn" onclick="selectDiceBet(500, this)">500</button>
+          </div>
+
+          <button id="joinDiceBtn" class="btn-verify" onclick="placeDiceBetOnline()">
+            🎯 دخول التحدي والبحث عن منافس
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. المهام -->
+    <div id="tab-tasks" class="tab-view">
+      <div id="adminAddTaskBtnBox" style="display: none; margin-bottom: 12px;">
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-verify" style="flex: 1; background: linear-gradient(90deg, #2563eb, #3b82f6); margin-top: 0; font-size: 13px;" onclick="promptAddChannel()">
+            ➕ إضافة قناة
+          </button>
+          <button class="btn-verify" style="flex: 1; background: linear-gradient(90deg, #b91c1c, #dc2626); margin-top: 0; font-size: 13px;" onclick="promptRemoveChannel()">
+            ➖ إزالة قناة
+          </button>
+        </div>
+      </div>
+
+      <div class="custom-card">
+        <div class="card-title">🎁 قنوات الاشتراك الإجباري والمهام</div>
+        <div id="dynamicTasksList" style="display: flex; flex-direction: column; gap: 10px;"></div>
+      </div>
+    </div>
+
+    <!-- 3. الأصدقاء -->
+    <div id="tab-friends" class="tab-view">
+      <div class="custom-card">
+        <div class="card-title">🔗 نظام الإحالة التلقائي</div>
+        <p style="font-size: 12px; color: #cbd5e1; margin-bottom: 12px; line-height: 1.6;">
+          شارك رابط دعوتك الخاص؛ يحصل صديقك على مكافأة، وتحصل أنت على <b>+200 نقطة</b> فور اشتراكه.
+        </p>
+        <button class="btn-verify" onclick="copyLink()">📋 نسخ الرابط ومشاركته</button>
+      </div>
+    </div>
+
+    <!-- 4. الملف الشخصي -->
+    <div id="tab-profile" class="tab-view">
+      <div class="custom-card" style="text-align:center; padding: 20px;">
+        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">إجمالي الرصيد الحالي</div>
+        <div style="font-size: 32px; font-weight: 900; color: #f87171;" id="profileBalance">500 PTS</div>
+      </div>
+
+      <div class="custom-card">
+        <div class="card-title">💳 سحب الأرباح (الحد الأدنى: 5,000 نقطة)</div>
+        <button id="withdrawBtn" class="btn-verify" style="background: #334155; color: #94a3b8; cursor: not-allowed;" onclick="openWithdrawModal()">
+          🔒 سحب الرصيد (متبقي 4,500 نقطة)
+        </button>
+      </div>
+    </div>
+
+    <!-- 5. لوحة الأدمن مع تحديد القناة -->
+    <div id="tab-admin" class="tab-view">
+      <div class="custom-card" style="border-color: #f59e0b; background: rgba(25, 12, 6, 0.95);">
+        <div class="card-title" style="color: #fde047; font-size: 16px; text-align: center;">🎟️ إدارة وتوزيع الكودات</div>
+        
+        <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 12px; margin: 12px 0; border: 1px dashed rgba(245, 158, 11, 0.4);">
+          <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;">الكود النشط حالياً:</div>
+          <div id="currentActiveCodeDisplay" style="font-size: 20px; font-weight: 900; color: #4ade80; letter-spacing: 2px;">لا يوجد كود نشط</div>
+          <div id="currentCodeDetails" style="font-size: 11px; color: #cbd5e1; margin-top: 4px;">اضغط على "إنشاء كود" لتوليد كود جديد</div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 14px;">
+          <button class="btn-verify" style="flex: 1; background: #3b82f6; margin-top: 0;" onclick="adminGenerateCodePrompt()">
+            ➕ إنشاء كود
+          </button>
+          <button class="btn-verify" style="flex: 1; background: #10b981; margin-top: 0;" onclick="publishCodeWithChannelSelection()">
+            📢 وزّع في القناة
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item active" onclick="switchTab('tab-home', this)">
+        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>الرئيسية</span>
+      </div>
+      <div class="nav-item" onclick="switchTab('tab-tasks', this)">
+        <svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg><span>Tasks</span>
+      </div>
+      <div class="nav-item" onclick="switchTab('tab-friends', this)">
+        <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg><span>Friends</span>
+      </div>
+      <div class="nav-item" onclick="switchTab('tab-profile', this)">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span>Profile</span>
+      </div>
+      <div class="nav-item" id="adminNavItem" style="display: none; color: #f87171;" onclick="switchTab('tab-admin', this)">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg><span>Admin</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="withdrawModal" class="custom-modal">
+    <div class="modal-box">
+      <h3 style="color:#ef4444; margin-bottom: 6px;">طلب سحب الأرباح</h3>
+      <p style="font-size: 11px; color:#cbd5e1;">أدخل عنوان محفظتك (TON أو USDT) لاستلام أرباحك:</p>
+      <input type="text" id="walletInput" class="modal-input" placeholder="UQ... أو عنوان المحفظة">
+      <div style="display:flex; gap:10px;">
+        <button class="btn-verify" style="margin-top:0;" onclick="submitWithdrawal()">تأكيد وإرسال للأدمن</button>
+        <button class="btn-verify" style="background:#334155; margin-top:0;" onclick="closeWithdrawModal()">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ADMIN_USER_ID = "7300916931";
+    const BOT_USERNAME = "Mii_ni_bot";
+
+    const DEFAULT_CHANNELS = [
+      { id: "c_official", title: "📢 القناة الرسمية", link: "https://t.me/H_E_I_A", handle: "@H_E_I_A" },
+      { id: "c_exchange", title: "📢 قناة التبادل", link: "https://t.me/Ref_changes", handle: "@Ref_changes" }
+    ];
+
+    let requiredChannels = JSON.parse(localStorage.getItem("miini_saved_channels") || "null") || DEFAULT_CHANNELS;
+
+    let userId = null;
+    let userName = "المستخدم";
+    let userPhoto = "https://i.postimg.cc/0zLCLkCS/image.jpg";
+
+    try {
+      const tg = window.Telegram?.WebApp;
+      if (tg) {
+        tg.expand();
+        tg.ready();
+        if (tg.initDataUnsafe?.user?.id) {
+          userId = String(tg.initDataUnsafe.user.id);
+          userName = tg.initDataUnsafe.user.first_name || "المستخدم";
+          if (tg.initDataUnsafe.user.photo_url) userPhoto = tg.initDataUnsafe.user.photo_url;
+        }
+      }
+    } catch (e) {}
+
+    if (!userId) {
+      userId = localStorage.getItem("miini_user_identifier") || "acc_" + Math.random().toString(36).substring(2, 9);
+      localStorage.setItem("miini_user_identifier", userId);
+    }
+
+    const STORAGE_KEY_POINTS = `miini_${userId}_points`;
+    const STORAGE_KEY_TASKS = `miini_${userId}_completed_tasks`;
+    const STORAGE_KEY_ONBOARDED = `miini_${userId}_onboarded`;
+    const STORAGE_KEY_DAILY = `miini_${userId}_last_daily`;
+
+    let userPoints = parseInt(localStorage.getItem(STORAGE_KEY_POINTS)) || 500;
+    let completedTasks = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY_TASKS) || "[]"));
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY_POINTS, userPoints.toString());
+      localStorage.setItem(STORAGE_KEY_TASKS, JSON.stringify(Array.from(completedTasks)));
+      localStorage.setItem("miini_saved_channels", JSON.stringify(requiredChannels));
+    }
+
+    function checkAdminPrivileges() {
+      if (String(userId) === String(ADMIN_USER_ID)) {
+        const adminTab = document.getElementById("adminNavItem");
+        if (adminTab) adminTab.style.display = "flex";
+        const adminTaskBox = document.getElementById("adminAddTaskBtnBox");
+        if (adminTaskBox) adminTaskBox.style.display = "block";
+      }
+    }
+
+    // ----------------- إدارة القنوات -----------------
+    function renderChannelsUI() {
+      const splashList = document.getElementById("splashChannelsList");
+      if (splashList) {
+        splashList.innerHTML = requiredChannels.map(ch => `
+          <div class="channel-row">
+            <span class="channel-title">${ch.title}</span>
+            <a href="${ch.link}" target="_blank" class="btn-join" onclick="markChannelClicked('${ch.id}')">انضمام</a>
+          </div>
+        `).join('');
+      }
+
+      const tasksList = document.getElementById("dynamicTasksList");
+      if (tasksList) {
+        tasksList.innerHTML = requiredChannels.map(ch => {
+          const isDone = completedTasks.has(ch.id);
+          return `
+            <div class="channel-row">
+              <div>
+                <div class="channel-title">${ch.title}</div>
+                <div style="font-size: 11px; color: #fca5a5;">مهمة إجبارية (+100 نقطة)</div>
+              </div>
+              <div id="taskActions_${ch.id}">
+                ${isDone 
+                  ? `<span class="btn-completed">✓ تم التحقق</span>`
+                  : `<a href="${ch.link}" target="_blank" class="btn-join" onclick="markTaskClicked('${ch.id}')">انضمام</a>
+                     <button class="btn-check" onclick="verifyTask('${ch.id}', 100)">تحقق</button>`
+                }
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function promptAddChannel() {
+      const title = prompt("أدخل اسم القناة:", "📢 قناة رسمية جديدة");
+      if (!title) return;
+      const link = prompt("أدخل رابط القناة:", "https://t.me/");
+      if (!link) return;
+      const handle = prompt("أدخل معرف القناة:", "@");
+      if (!handle) return;
+
+      const fixedId = "ch_" + handle.replace("@", "").toLowerCase().trim();
+      if (requiredChannels.some(c => c.id === fixedId)) {
+        alert("⚠️ هذه القناة مضافة بالفعل!");
+        return;
+      }
+
+      requiredChannels.push({ id: fixedId, title: title.trim(), link: link.trim(), handle: handle.trim() });
+      saveState();
+      renderChannelsUI();
+      alert("✅ تمت إضافة القناة وحفظها بنجاح!");
+    }
+
+    function promptRemoveChannel() {
+      if (requiredChannels.length === 0) return alert("لا توجد قنوات!");
+
+      let text = "اختر رقم القناة التي تريد إزالتها:\n\n";
+      requiredChannels.forEach((c, idx) => {
+        text += `${idx + 1}. ${c.title} (${c.handle})\n`;
+      });
+
+      const choice = prompt(text);
+      if (!choice) return;
+
+      const idx = parseInt(choice) - 1;
+      if (isNaN(idx) || idx < 0 || idx >= requiredChannels.length) return alert("رقم غير صحيح!");
+
+      const del = requiredChannels.splice(idx, 1);
+      saveState();
+      renderChannelsUI();
+      alert(`🗑️ تم حذف القناة (${del[0].title})!`);
+    }
+
+    let clickedChannels = {};
+    function markChannelClicked(id) { clickedChannels[id] = true; }
+
+    let clickedTasks = {};
+    function markTaskClicked(id) { clickedTasks[id] = true; }
+
+    function verifyInitialChannels() {
+      const allClicked = requiredChannels.every(ch => clickedChannels[ch.id]);
+      if (allClicked) {
+        localStorage.setItem(STORAGE_KEY_ONBOARDED, "true");
+        saveState();
+        document.getElementById("splash-screen").style.display = "none";
+        document.getElementById("main-container").style.display = "flex";
+        updateBalanceUI();
+        checkAdminPrivileges();
+      } else {
+        alert("⚠️ يرجى الضغط على زر الانضمام لجميع القنوات أولاً!");
+      }
+    }
+
+    function verifyTask(id, pts) {
+      if (completedTasks.has(id)) return alert("⚠️ تم استلام مكافأة هذه القناة مسبقاً ولن تتكرر!");
+      if (!clickedTasks[id]) return alert("⚠️ اضغط على زر انضمام أولاً!");
+
+      completedTasks.add(id);
+      userPoints += pts;
+      saveState();
+      updateBalanceUI();
+      renderChannelsUI();
+      alert(`🎉 تم التحقق وإضافة +${pts} نقطة!`);
+    }
+
+    // ----------------- نظام الكودات واختيار القناة -----------------
+    let currentPromo = JSON.parse(localStorage.getItem("miini_active_promo") || "null");
+
+    function adminGenerateCodePrompt() {
+      const rewardStr = prompt("أدخل قيمة النقاط (مثال: 250):", "250");
+      if (!rewardStr) return;
+      const usesStr = prompt("أدخل عدد الأشخاص (مثال: 50):", "50");
+      if (!usesStr) return;
+
+      const reward = parseInt(rewardStr);
+      const uses = parseInt(usesStr);
+      const code = "MII-" + Math.random().toString(36).substring(2, 7).toUpperCase();
+
+      currentPromo = { code: code, reward: reward, uses: uses };
+      localStorage.setItem("miini_active_promo", JSON.stringify(currentPromo));
+
+      document.getElementById("currentActiveCodeDisplay").innerText = code;
+      document.getElementById("currentCodeDetails").innerText = `الهدية: +${reward} نقطة | المتاح: ${uses} مستخدم`;
+      alert(`✅ تم إنشاء الكود بنجاح!\nالكود: ${code}\nالمكافأة: ${reward}\nالمقاعد: ${uses}`);
+    }
+
+    // يطلب منك معرف القناة ثم يرسل الأمر للبوت
+    function publishCodeWithChannelSelection() {
+      if (!currentPromo) return alert("⚠️ يرجى إنشاء كود أولاً بالضغط على 'إنشاء كود'!");
+
+      const targetChannel = prompt("أدخل معرف القناة التي تريد النشر فيها (مثال: @H_E_I_A):", "@H_E_I_A");
+      if (!targetChannel) return;
+
+      const cleanChannel = targetChannel.replace("@", "").trim();
+      const botPayload = `pub_${currentPromo.code}_${currentPromo.reward}_${currentPromo.uses}_${cleanChannel}`;
+      const telegramDeepLink = `https://t.me/${BOT_USERNAME}?start=${botPayload}`;
+
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.openTelegramLink(telegramDeepLink);
+      } else {
+        window.open(telegramDeepLink, "_blank");
+      }
+    }
+
+    function redeemPromoCode() {
+      const input = document.getElementById("promoInputMain");
+      const val = input.value.trim().toUpperCase();
+      if (!val) return alert("اكتب الكود أولاً!");
+
+      const usedKey = `promo_used_${val}`;
+      if (localStorage.getItem(usedKey)) return alert("⚠️ استخدمت هذا الكود مسبقاً!");
+
+      if (currentPromo && currentPromo.code === val) {
+        if (currentPromo.uses <= 0) return alert("⚠️ انتهت كمية هذا الكود!");
+
+        currentPromo.uses--;
+        localStorage.setItem("miini_active_promo", JSON.stringify(currentPromo));
+        localStorage.setItem(usedKey, "true");
+
+        userPoints += currentPromo.reward;
+        saveState();
+        updateBalanceUI();
+        input.value = "";
+        try { confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } }); } catch(e) {}
+        alert(`🎉 مبروك! حصلت على +${currentPromo.reward} نقطة!`);
+      } else {
+        alert("❌ الكود غير صحيح!");
+      }
+    }
+
+    // ----------------- الألعاب (عجلة الحظ والنرد) -----------------
+    function openGameScreen(screenId) {
+      document.getElementById("homeMenuContainer").style.display = "none";
+      document.querySelectorAll(".game-screen").forEach(s => s.style.display = "none");
+      document.getElementById(screenId).style.display = "flex";
+      if (screenId === 'wheelScreen') drawWheel();
+    }
+
+    function backToHomeMenu() {
+      document.querySelectorAll(".game-screen").forEach(s => s.style.display = "none");
+      document.getElementById("homeMenuContainer").style.display = "flex";
+    }
+
+    let wheelBetAmount = 50;
+    let isWheelSpinning = false;
+    let wheelPlayers = [];
+    let currentWheelRotation = 0;
+    const canvas = document.getElementById("wheelCanvas");
+    const ctx = canvas.getContext("2d");
+    const playerImages = {};
+
+    function selectWheelBet(amt, btn) {
+      if (isWheelSpinning) return;
+      wheelBetAmount = amt;
+      btn.parentElement.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function preloadAvatar(url, callback) {
+      if (playerImages[url]) { if (callback) callback(); return; }
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = url;
+      img.onload = () => { playerImages[url] = img; if (callback) callback(); };
+      img.onerror = () => { playerImages[url] = null; if (callback) callback(); };
+    }
+
+    function drawWheel() {
+      const total = wheelPlayers.reduce((sum, p) => sum + p.bet, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (wheelPlayers.length === 0) {
+        ctx.beginPath();
+        ctx.arc(240, 240, 225, 0, 2 * Math.PI);
+        ctx.fillStyle = "#16070a";
+        ctx.fill();
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = "#ef4444";
+        ctx.stroke();
+
+        ctx.fillStyle = "#fca5a5";
+        ctx.font = "bold 24px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("في انتظار وضع الرهان...", 240, 246);
+        return;
+      }
+
+      let currentAngle = 0;
+      wheelPlayers.forEach((player) => {
+        const slice = (player.bet / total) * 2 * Math.PI;
+
+        ctx.beginPath();
+        ctx.moveTo(240, 240);
+        ctx.arc(240, 240, 225, currentAngle, currentAngle + slice);
+        ctx.closePath();
+        ctx.fillStyle = player.color;
+        ctx.fill();
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "#060204";
+        ctx.stroke();
+
+        const img = playerImages[player.avatar];
+        const midAngle = currentAngle + slice / 2;
+        const radiusDist = 135;
+        const avatarSize = 54;
+
+        ctx.save();
+        ctx.translate(240, 240);
+        ctx.rotate(midAngle);
+        ctx.beginPath();
+        ctx.arc(radiusDist, 0, avatarSize / 2, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+
+        if (img) {
+          ctx.drawImage(img, radiusDist - avatarSize / 2, -avatarSize / 2, avatarSize, avatarSize);
+        } else {
+          ctx.fillStyle = "#ffffff";
+          ctx.fill();
+        }
+        ctx.restore();
+
+        currentAngle += slice;
+      });
+    }
+
+    function updateWheelPlayersUI() {
+      const container = document.getElementById("playersContainer");
+      const total = wheelPlayers.reduce((sum, p) => sum + p.bet, 0);
+      document.getElementById("totalPot").innerText = `${total} PTS`;
+
+      container.innerHTML = wheelPlayers.map(p => {
+        const pct = total > 0 ? Math.round((p.bet / total) * 100) : 0;
+        return `
+          <div class="player-row" style="border-right: 4px solid ${p.color};">
+            <div style="display:flex; align-items:center;">
+              <img src="${p.avatar}" class="player-avatar-small">
+              <span style="font-weight: 800; margin-right: 6px;">${p.name}</span>
+            </div>
+            <span style="color: #cbd5e1;">${p.bet} PTS (${pct}%)</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function placeWheelBetOnline() {
+      if (isWheelSpinning) return;
+      if (userPoints < wheelBetAmount) return alert("⚠️ رصيدك غير كافٍ!");
+
+      userPoints -= wheelBetAmount;
+      saveState();
+      updateBalanceUI();
+
+      const btn = document.getElementById("joinWheelBtn");
+      btn.disabled = true;
+      btn.style.opacity = "0.5";
+
+      wheelPlayers = [{ id: userId, name: userName, avatar: userPhoto, bet: wheelBetAmount, color: "#ef4444" }];
+      preloadAvatar(userPhoto, () => drawWheel());
+      updateWheelPlayersUI();
+
+      let countdown = 3;
+      const timerEl = document.getElementById("wheelTimer");
+      timerEl.innerText = `⏳ جاري البحث عن منافس: ${countdown}ث`;
+
+      const t = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+          timerEl.innerText = `⏳ جاري البحث عن منافس: ${countdown}ث`;
+        } else {
+          clearInterval(t);
+          addOpponentAndSpin("bot", "🤖 MiiNi Bot", "https://i.postimg.cc/0zLCLkCS/image.jpg", wheelBetAmount);
+        }
+      }, 1000);
+    }
+
+    function addOpponentAndSpin(oppId, oppName, oppAvatar, oppBet) {
+      wheelPlayers.push({ id: oppId, name: oppName, avatar: oppAvatar, bet: oppBet, color: "#3b82f6" });
+      preloadAvatar(oppAvatar, () => {
+        drawWheel();
+        updateWheelPlayersUI();
+        executeWheelSpin();
+      });
+    }
+
+    function executeWheelSpin() {
+      isWheelSpinning = true;
+      const timerEl = document.getElementById("wheelTimer");
+      timerEl.innerText = "🌀 جاري دوران العجلة...";
+
+      const totalPot = wheelPlayers.reduce((s, p) => s + p.bet, 0);
+      const isWinnerUser = Math.random() >= 0.45;
+      const winnerIdx = isWinnerUser ? 0 : 1;
+
+      let startAngle = 0;
+      for (let i = 0; i < winnerIdx; i++) {
+        startAngle += (wheelPlayers[i].bet / totalPot) * 360;
+      }
+      const sliceAngle = (wheelPlayers[winnerIdx].bet / totalPot) * 360;
+      const targetMid = startAngle + sliceAngle / 2;
+
+      const extraSpins = 360 * 6;
+      const finalAngle = extraSpins + (270 - targetMid);
+      currentWheelRotation += finalAngle;
+
+      canvas.style.transform = `rotate(${currentWheelRotation}deg)`;
+
+      setTimeout(() => {
+        const winner = wheelPlayers[winnerIdx];
+        const isUserWinner = winner.id === userId;
+
+        if (isUserWinner) {
+          userPoints += totalPot;
+          saveState();
+          updateBalanceUI();
+          try { confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } }); } catch(e) {}
+          timerEl.innerText = `🎉 مبروك! فزت بـ ${totalPot} نقطة!`;
+        } else {
+          timerEl.innerText = `😢 حظ أوفر! فاز ${winner.name}!`;
+        }
+
+        setTimeout(() => {
+          isWheelSpinning = false;
+          wheelPlayers = [];
+          drawWheel();
+          updateWheelPlayersUI();
+          timerEl.innerText = "⏳ في انتظار وضع الرهان";
+          const btn = document.getElementById("joinWheelBtn");
+          btn.disabled = false;
+          btn.style.opacity = "1";
+        }, 2500);
+      }, 4200);
+    }
+
+    // النرد
+    let diceBetAmount = 50;
+    let isDiceRolling = false;
+    const diceIcons = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+
+    function selectDiceBet(amt, btn) {
+      if (isDiceRolling) return;
+      diceBetAmount = amt;
+      btn.parentElement.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    async function placeDiceBetOnline() {
+      if (isDiceRolling) return;
+      if (userPoints < diceBetAmount) return alert("⚠️ رصيدك غير كافٍ!");
+
+      userPoints -= diceBetAmount;
+      saveState();
+      updateBalanceUI();
+
+      const btn = document.getElementById("joinDiceBtn");
+      btn.disabled = true;
+      btn.style.opacity = "0.5";
+
+      document.getElementById("diceMyAvatar").src = userPhoto;
+      document.getElementById("diceMyName").innerText = userName;
+      document.getElementById("diceOpponentName").innerText = "جاري البحث...";
+      document.getElementById("diceTotalPot").innerText = `${diceBetAmount} PTS`;
+
+      let countdown = 3;
+      const timerEl = document.getElementById("diceTimer");
+      timerEl.innerText = `⏳ جاري البحث عن منافس: ${countdown}ث`;
+
+      const t = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+          timerEl.innerText = `⏳ جاري البحث عن منافس: ${countdown}ث`;
+        } else {
+          clearInterval(t);
+          startDuel("🤖 MiiNi Bot", "https://i.postimg.cc/0zLCLkCS/image.jpg", diceBetAmount * 2);
+        }
+      }, 1000);
+    }
+
+    function startDuel(oppName, oppAvatar, totalPot) {
+      document.getElementById("diceOpponentAvatar").src = oppAvatar;
+      document.getElementById("diceOpponentName").innerText = oppName;
+      document.getElementById("diceTotalPot").innerText = `${totalPot} PTS`;
+
+      isDiceRolling = true;
+      const timerEl = document.getElementById("diceTimer");
+      timerEl.innerText = "🎲 جاري رمي النرد...";
+
+      const myBox = document.getElementById("myDiceBox");
+      const oppBox = document.getElementById("opponentDiceBox");
+      myBox.classList.add("rolling");
+      oppBox.classList.add("rolling");
+
+      let count = 0;
+      const anim = setInterval(() => {
+        myBox.innerText = diceIcons[Math.floor(Math.random() * 6)];
+        oppBox.innerText = diceIcons[Math.floor(Math.random() * 6)];
+        count++;
+        if (count > 14) {
+          clearInterval(anim);
+          myBox.classList.remove("rolling");
+          oppBox.classList.remove("rolling");
+
+          let myVal = Math.floor(Math.random() * 6) + 1;
+          let oppVal = Math.floor(Math.random() * 6) + 1;
+          while (myVal === oppVal) oppVal = Math.floor(Math.random() * 6) + 1;
+
+          myBox.innerText = diceIcons[myVal - 1];
+          oppBox.innerText = diceIcons[oppVal - 1];
+
+          if (myVal > oppVal) {
+            userPoints += totalPot;
+            saveState();
+            updateBalanceUI();
+            try { confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } }); } catch(e) {}
+            timerEl.innerText = `🎉 فزت بـ ${totalPot} نقطة (${myVal} ضد ${oppVal})!`;
+          } else {
+            timerEl.innerText = `😢 فاز ${oppName} (${oppVal} ضد ${myVal})!`;
+          }
+
+          setTimeout(() => {
+            isDiceRolling = false;
+            timerEl.innerText = "⏳ في انتظار وضع الرهان";
+            document.getElementById("diceTotalPot").innerText = "0 PTS";
+            document.getElementById("diceOpponentName").innerText = "في الانتظار...";
+            const btn = document.getElementById("joinDiceBtn");
+            btn.disabled = false;
+            btn.style.opacity = "1";
+          }, 2500);
+        }
+      }, 100);
+    }
+
+    // ----------------- باقي الوظائف الأساسية -----------------
+    function claimDailyReward() {
+      const last = localStorage.getItem(STORAGE_KEY_DAILY);
+      if (last && (Date.now() - parseInt(last)) < 24 * 3600 * 1000) return alert("⚠️ استلمت المكافأة اليوم بالفعل!");
+
+      userPoints += 100;
+      localStorage.setItem(STORAGE_KEY_DAILY, Date.now().toString());
+      saveState();
+      updateBalanceUI();
+      alert("🎉 تم استلام +100 نقطة يومية!");
+    }
+
+    function openWithdrawModal() {
+      if (userPoints < 5000) return;
+      document.getElementById("withdrawModal").style.display = "flex";
+    }
+
+    function closeWithdrawModal() {
+      document.getElementById("withdrawModal").style.display = "none";
+    }
+
+    function submitWithdrawal() {
+      const wallet = document.getElementById("walletInput").value.trim();
+      if (!wallet) return alert("أدخل عنوان محفظتك!");
+
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.sendData(JSON.stringify({
+          action: "withdraw",
+          amount: userPoints,
+          wallet: wallet
+        }));
+        userPoints = 0;
+        saveState();
+        updateBalanceUI();
+        closeWithdrawModal();
+        alert("🎉 تم إرسال طلب السحب للإدارة للمراجعة!");
+      }
+    }
+
+    function copyLink() {
+      navigator.clipboard.writeText(`https://t.me/${BOT_USERNAME}?start=ref_${userId}`);
+      alert("📋 تم نسخ الرابط بنجاح!");
+    }
+
+    function switchTab(tabId, nav) {
+      document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      nav.classList.add('active');
+      if (tabId === 'tab-home') backToHomeMenu();
+    }
+
+    function updateBalanceUI() {
+      document.getElementById("pointsVal").innerText = `💎 ${userPoints} PTS`;
+      document.getElementById("profileBalance").innerText = `${userPoints} PTS`;
+
+      const btn = document.getElementById("withdrawBtn");
+      if (userPoints >= 5000) {
+        btn.style.background = "linear-gradient(90deg, #10b981, #059669)";
+        btn.style.color = "#ffffff";
+        btn.style.cursor = "pointer";
+        btn.innerText = "🔓 سحب الرصيد الآن (متاح)";
+      } else {
+        const remaining = 5000 - userPoints;
+        btn.style.background = "#334155";
+        btn.style.color = "#94a3b8";
+        btn.style.cursor = "not-allowed";
+        btn.innerText = `🔒 سحب الرصيد (متبقي ${remaining} نقطة)`;
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById("username").innerText = userName;
+      document.getElementById("welcomeUserName").innerText = userName;
+      document.getElementById("userHeaderAvatar").src = userPhoto;
+
+      checkAdminPrivileges();
+      renderChannelsUI();
+
+      if (currentPromo) {
+        document.getElementById("currentActiveCodeDisplay").innerText = currentPromo.code;
+        document.getElementById("currentCodeDetails").innerText = `الهدية: +${currentPromo.reward} نقطة | المتاح: ${currentPromo.uses} مستخدم`;
+      }
+
+      if (localStorage.getItem(STORAGE_KEY_ONBOARDED) === "true") {
+        document.getElementById("splash-screen").style.display = "none";
+        document.getElementById("main-container").style.display = "flex";
+        updateBalanceUI();
+        checkAdminPrivileges();
+      }
+    });
+  </script>
+</body>
+</html>
+gin-right: 6px;">${p.name}</span>
+            </div>
+            <span style="color: #cbd5e1;">${p.bet} PTS (${pct}%)</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function placeWheelBetOnline() {
+      if (isWheelSpinning) return;
+      if (userPoints < wheelBetAmount) {
+        triggerHaptic('error');
+        alert("⚠️ رصيدك غير كافٍ!");
+        return;
+      }
+
+      triggerHaptic('heavy');
+      userPoints -= wheelBetAmount;
+      saveState();
+      updateBalanceUI();
+
+      const btn = document.getElementById("joinWheelBtn");
+      btn.disabled = true;
+      btn.style.opacity = "0.5";
+
+      wheelPlayers = [
+        { id: userId, name: userName, avatar: userPhoto, bet: wheelBetAmount, color: "#ef4444" }
+      ];
+
+      preloadAvatar(userPhoto, () => drawWheel());
+      updateWheelPlayersUI();
+
+      let countdown = 3;
+      const timerEl = document.getElementById("wheelTimer");
+      timerEl.innerText = `⏳ جاري البحث عن منافس: ${countdown}ث`;
+
+      const t = setInterval(() => {
+        countdown--;
+        playBeep(350, 'sine', 0.05);
+        if (countdown > 0) {
+          timerEl.innerText = `⏳ جاري البحث عن منافس: ${countdown}ث`;
+        } else {
+          clearInterval(t);
+          addOpponentAndSpin("bot", "🤖 MiiNi Bot", "https://i.postimg.cc/0zLCLkCS/image.jpg", wheelBetAmount);
+        }
+      }, 1000);
+    }
+
+    function addOpponentAndSpin(oppId, oppName, oppAvatar, oppBet) {
+      wheelPlayers.push({
+        id: oppId,
+        name: oppName,
+        avatar: oppAvatar,
+        bet: oppBet,
+        color: "#3b82f6"
+      });
+
+      preloadAvatar(oppAvatar, () => {
+        drawWheel();
+        updateWheelPlayersUI();
+        executeWheelSpin();
+      });
+    }
+
+    function executeWheelSpin() {
+      isWheelSpinning = true;
+      const timerEl = document.getElementById("wheelTimer");
+      timerEl.innerText = "🌀 جاري دوران العجلة...";
+
+      const totalPot = wheelPlayers.reduce((s, p) => s + p.bet, 0);
+      const isWinnerUser = Math.random() >= 0.45;
+      const winnerIdx = isWinnerUser ? 0 : 1;
+
+      let startAngle = 0;
+      for (let i = 0; i < winnerIdx; i++) {
+        startAngle += (wheelPlayers[i].bet / totalPot) * 360;
+      }
+      const sliceAngle = (wheelPlayers[winnerIdx].bet / totalPot) * 360;
+      const targetMid = startAngle + sliceAngle / 2;
+
+      const extraSpins = 360 * 6;
+      const finalAngle = extraSpins + (270 - targetMid);
+      currentWheelRotation += finalAngle;
+
+      canvas.style.transform = `rotate(${currentWheelRotation}deg)`;
+
+      const spinInterval = setInterval(() => {
+        playBeep(250, 'square', 0.03);
+        triggerHaptic('light');
+      }, 350);
+
+      setTimeout(() => {
+        clearInterval(spinInterval);
+        const winner = wheelPlayers[winnerIdx];
+        const isUserWinner = winner.id === userId;
+
+        if (isUserWinner) {
+          celebrateWin();
+          userPoints += totalPot;
+          saveState();
+          updateBalanceUI();
+          timerEl.innerText = `🎉 مبروك! فزت بـ ${totalPot} نقطة!`;
+        } else {
+          triggerHaptic('error');
+          playBeep(180, 'sawtooth', 0.3);
+          timerEl.innerText = `😢 حظ أوفر! فاز ${winner.name}!`;
+        }
+
+        setTimeout(() => {
+          isWheelSpinning = false;
+          wheelPlayers = [];
+          drawWheel();
+          updateWheelPlayersUI();
+          timerEl.innerText = "⏳ في انتظار وضع الرهان";
+          const btn = document.getElementById("joinWheelBtn");
+          btn.disabled = false;
+          btn.style.opacity = "1";
+        }, 2500);
+      }, 4200);
+    }
+
+    let diceBetAmount = 50;
+    let isDiceRolling = false;
+    const diceIcons = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+
+    function selectDiceBet(amt, btn) {
+      if (isDiceRolling) return;
+      triggerHaptic('light');
+      diceBetAmount = amt;
+      btn.parentElement.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    async function placeDiceBetOnline() {
+      if (isDiceRolling) return;
+      if (userPoints < diceBetAmount) {
+        triggerHaptic('error');
+        alert("⚠️ رصيدك غير كافٍ!");
+        return;
+      }
+
+      triggerHaptic('heavy');
+      userPoints -= diceBetAmount;
+      saveState();
+      updateBalanceUI();
+
+      const btn = document.getElementById("joinDiceBtn");
+      btn.disabled = true;
+      btn.style.opacity = "0.5";
+
+      document.getElementById("diceMyAvatar").src = userPhoto;
+      document.getElementById("diceMyName").innerText = userName;
+      document.getElementById("diceOpponentName").innerText = "جاري البحث...";
+      document.getElementById("diceTotalPot").innerText = `${diceBetAmount} PTS`;
+
+      let countdown = 3;
+      const timerEl = document.getElementById("diceTimer");
+      timerEl.innerText = `⏳ جاري البحث عن منافس: ${countdown}ث`;
+
+      const t = setInterval(() => {
+        countdown--;
+        playBeep(350, 'sine', 0.05);
+        if (countdown > 0) {
+          timerEl.innerText = `⏳ جاري البحث عن منافس: ${countdown}ث`;
+        } else {
+          clearInterval(t);
+          startDuel("🤖 MiiNi Bot", "https://i.postimg.cc/0zLCLkCS/image.jpg", diceBetAmount * 2);
+        }
+      }, 1000);
+    }
+
+    function startDuel(oppName, oppAvatar, totalPot) {
+      document.getElementById("diceOpponentAvatar").src = oppAvatar;
+      document.getElementById("diceOpponentName").innerText = oppName;
+      document.getElementById("diceTotalPot").innerText = `${totalPot} PTS`;
+
+      isDiceRolling = true;
+      const timerEl = document.getElementById("diceTimer");
+      timerEl.innerText = "🎲 جاري رمي النرد...";
+
+      const myBox = document.getElementById("myDiceBox");
+      const oppBox = document.getElementById("opponentDiceBox");
+      myBox.classList.add("rolling");
+      oppBox.classList.add("rolling");
+
+      let count = 0;
+      const anim = setInterval(() => {
+        playBeep(300, 'square', 0.04);
+        triggerHaptic('light');
+        myBox.innerText = diceIcons[Math.floor(Math.random() * 6)];
+        oppBox.innerText = diceIcons[Math.floor(Math.random() * 6)];
+        count++;
+        if (count > 14) {
+          clearInterval(anim);
+          myBox.classList.remove("rolling");
+          oppBox.classList.remove("rolling");
+
+          let myVal = Math.floor(Math.random() * 6) + 1;
+          let oppVal = Math.floor(Math.random() * 6) + 1;
+          while (myVal === oppVal) oppVal = Math.floor(Math.random() * 6) + 1;
+
+          myBox.innerText = diceIcons[myVal - 1];
+          oppBox.innerText = diceIcons[oppVal - 1];
+
+          if (myVal > oppVal) {
+            celebrateWin();
+            userPoints += totalPot;
+            saveState();
+            updateBalanceUI();
+            timerEl.innerText = `🎉 فزت بـ ${totalPot} نقطة (${myVal} ضد ${oppVal})!`;
+          } else {
+            triggerHaptic('error');
+            playBeep(180, 'sawtooth', 0.3);
+            timerEl.innerText = `😢 فاز ${oppName} (${oppVal} ضد ${myVal})!`;
+          }
+
+          setTimeout(() => {
+            isDiceRolling = false;
+            timerEl.innerText = "⏳ في انتظار وضع الرهان";
+            document.getElementById("diceTotalPot").innerText = "0 PTS";
+            document.getElementById("diceOpponentName").innerText = "في الانتظار...";
+            const btn = document.getElementById("joinDiceBtn");
+            btn.disabled = false;
+            btn.style.opacity = "1";
+          }, 2500);
+        }
+      }, 100);
+    }
+
+    function openWithdrawModal() {
+      if (userPoints < 5000) return;
+      triggerHaptic('medium');
+      document.getElementById("withdrawModal").style.display = "flex";
+    }
+
+    function closeWithdrawModal() {
+      document.getElementById("withdrawModal").style.display = "none";
+    }
+
+    async function submitWithdrawal() {
+      const wallet = document.getElementById("walletInput").value.trim();
+      if (!wallet) {
+        alert("يرجى إدخال عنوان محفظتك بشكل صحيح!");
+        return;
+      }
+
+      triggerHaptic('success');
+
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.sendData(JSON.stringify({
+          action: "withdraw",
+          amount: userPoints,
+          wallet: wallet
+        }));
+        userPoints = 0;
+        saveState();
+        updateBalanceUI();
+        closeWithdrawModal();
+        alert("🎉 تم إرسال طلب السحب للإدارة للمراجعة!");
+      } else {
+        alert("⚠️ يرجى استخدام التطبيق من داخل تيليجرام.");
+      }
+    }
+
+    function copyLink() {
+      triggerHaptic('light');
+      navigator.clipboard.writeText(`https://t.me/Mii_ni_bot?start=ref_${userId}`);
+      celebrateWin();
+      alert("📋 تم نسخ الرابط بنجاح!");
+    }
+
+    function switchTab(tabId, nav) {
+      triggerHaptic('light');
+      document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      nav.classList.add('active');
+      if (tabId === 'tab-home') backToHomeMenu();
+      if (tabId === 'tab-admin') backToAdminMain();
+    }
+
+    function updateBalanceUI() {
+      document.getElementById("pointsVal").innerText = `💎 ${userPoints} PTS`;
+      document.getElementById("profileBalance").innerText = `${userPoints} PTS`;
+
+      const btn = document.getElementById("withdrawBtn");
+      if (userPoints >= 5000) {
+        btn.style.background = "linear-gradient(90deg, #10b981, #059669)";
+        btn.style.color = "#ffffff";
+        btn.style.cursor = "pointer";
+        btn.innerText = "🔓 سحب الرصيد الآن (متاح)";
+      } else {
+        const remaining = 5000 - userPoints;
+        btn.style.background = "#334155";
+        btn.style.color = "#94a3b8";
+        btn.style.cursor = "not-allowed";
+        btn.innerText = `🔒 سحب الرصيد (متبقي ${remaining} نقطة)`;
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById("username").innerText = userName;
+      document.getElementById("welcomeUserName").innerText = userName;
+      document.getElementById("userHeaderAvatar").src = userPhoto;
+
+      // تفعيل صلاحيات الأدمن فورياً دون أي تأخير
+      checkAdminPrivileges();
+      renderChannelsUI();
+      loadRequiredChannels();
+
+      document.getElementById("splash-screen").style.display = "flex";
+
+      const isDone = localStorage.getItem(STORAGE_KEY_ONBOARDED) === "true";
+      if (isDone) {
+        document.getElementById("splash-screen").style.display = "none";
+        document.getElementById("main-container").style.display = "flex";
+        updateBalanceUI();
+        checkDailyRewardStatus();
+        checkAdminPrivileges();
+      } else {
+        let p = 0;
+        const fill = document.getElementById("progressFill");
+        const txt = document.getElementById("loadText");
+        const t = setInterval(() => {
+          p += 25;
+          if (p >= 100) {
+            clearInterval(t);
+            fill.style.width = "100%";
+            txt.innerText = "جاهز!";
+            setTimeout(() => {
+              document.getElementById("loadingSection").style.display = "none";
+              document.getElementById("channelsSection").style.display = "flex";
+            }, 200);
+          } else {
+            fill.style.width = p + "%";
+            txt.innerText = "جاري التحميل... " + p + "%";
+          }
+        }, 40);
+      }
+    });
+  </script>
+</body>
+</html>
+xt = "🔓 سحب الرصيد الآن (متاح)";
+      } else {
+        const remaining = 5000 - userPoints;
+        btn.style.background = "#334155";
+        btn.style.color = "#94a3b8";
+        btn.style.cursor = "not-allowed";
+        btn.innerText = `🔒 سحب الرصيد (متبقي ${remaining} نقطة)`;
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      document.getElementById("username").innerText = userName;
+      document.getElementById("welcomeUserName").innerText = userName;
+      document.getElementById("userHeaderAvatar").src = userPhoto;
+
+      checkAdminPrivileges();
+      await loadRequiredChannels();
+
+      const isAllowed = await enforceCloudMultiAccountProtection();
+      if (!isAllowed) return;
+
+      document.getElementById("splash-screen").style.display = "flex";
+
+      const isDone = localStorage.getItem(STORAGE_KEY_ONBOARDED) === "true";
+      if (isDone) {
+        document.getElementById("splash-screen").style.display = "none";
+        document.getElementById("main-container").style.display = "flex";
+        updateBalanceUI();
+        checkDailyRewardStatus();
+        checkAdminPrivileges();
+      } else {
+        let p = 0;
+        const fill = document.getElementById("progressFill");
+        const txt = document.getElementById("loadText");
+        const t = setInterval(() => {
+          p += 25;
+          if (p >= 100) {
+            clearInterval(t);
+            fill.style.width = "100%";
+            txt.innerText = "جاهز!";
+            setTimeout(() => {
+              document.getElementById("loadingSection").style.display = "none";
+              document.getElementById("channelsSection").style.display = "flex";
+            }, 250);
+          } else {
+            fill.style.width = p + "%";
+            txt.innerText = "جاري التحميل... " + p + "%";
+          }
+        }, 50);
+      }
+    });
+  </script>
+</body>
+</html>

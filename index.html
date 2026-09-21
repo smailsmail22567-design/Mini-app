@@ -24,7 +24,6 @@
       color: #ffffff;
     }
 
-    /* شاشة الحظر */
     #ban-screen {
       position: fixed;
       inset: 0;
@@ -43,7 +42,6 @@
       margin-bottom: 12px;
     }
 
-    /* شاشة البداية */
     #splash-screen {
       position: absolute;
       inset: 0;
@@ -273,6 +271,37 @@
       font-weight: 800;
       color: #fca5a5;
       margin-bottom: 8px;
+    }
+
+    /* برومو كود الواجهة الرئيسية */
+    .promo-input-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .promo-input {
+      flex: 1;
+      background: #0d0407;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      outline: none;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .promo-btn {
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      padding: 0 16px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
     }
 
     .game-selection-card {
@@ -514,7 +543,6 @@
       fill: currentColor;
     }
 
-    /* Modal مخصص لسحب الأرباح */
     .custom-modal {
       position: fixed;
       inset: 0;
@@ -550,21 +578,6 @@
       direction: ltr;
       text-align: left;
     }
-
-    .admin-textarea {
-      width: 100%;
-      height: 100px;
-      background: #090204;
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      color: #fff;
-      padding: 12px;
-      border-radius: 10px;
-      font-size: 13px;
-      margin-top: 8px;
-      margin-bottom: 12px;
-      outline: none;
-      resize: none;
-    }
   </style>
 </head>
 <body>
@@ -574,7 +587,7 @@
     <div class="ban-icon">⛔</div>
     <h2 style="color: #ef4444; font-size: 22px; font-weight: 900; margin-bottom: 8px;">تم حظر هذا الحساب!</h2>
     <p style="font-size: 13px; color: #cbd5e1; line-height: 1.6;">
-      تم اكتشاف فتح حساب إضافي (تعدد) من نفس الجهاز. يُسمح فقط بالحساب الأساسي المسجل على هذا الجهاز.
+      تم اكتشاف فتح حساب إضافي من نفس الجهاز.
     </p>
   </div>
 
@@ -626,6 +639,16 @@
             <div style="font-size: 10px; color: #94a3b8;">سجل حضورك كل 24 ساعة لربح نقاط مجانية</div>
           </div>
           <button id="dailyCheckinBtn" class="btn-check" style="background:#f59e0b; color:#000; border:none; padding: 6px 14px; font-weight:800;" onclick="claimDailyReward()">استلام</button>
+        </div>
+
+        <!-- خانة البرومو كود في الشاشة الرئيسية لجميع المستخدمين -->
+        <div class="custom-card" style="border-color: #a855f7;">
+          <div class="card-title" style="color: #c084fc; margin-bottom: 4px;">🎟️ كود الهدية (Promo Code)</div>
+          <p style="font-size: 11px; color: #94a3b8;">أدخل كود المكافأة الخاص بك لشحن النقاط فوراً:</p>
+          <div class="promo-input-group">
+            <input type="text" id="promoInputMain" class="promo-input" placeholder="اكتب الكود هنا...">
+            <button class="promo-btn" style="background:#a855f7;" onclick="redeemPromoCode()">تفعيل</button>
+          </div>
         </div>
 
         <div class="custom-card">
@@ -747,12 +770,12 @@
       </div>
     </div>
 
-    <!-- 3. الأصدقاء (الإحالة) -->
+    <!-- 3. الأصدقاء -->
     <div id="tab-friends" class="tab-view">
       <div class="custom-card">
         <div class="card-title">🔗 نظام الإحالة التلقائي (Deep Linking)</div>
         <p style="font-size: 12px; color: #cbd5e1; margin-bottom: 12px; line-height: 1.6;">
-          شارك رابط دعوتك الخاص؛ يحصل صديقك على مكافأة ترحيبية، وتحصل أنت تلقائياً على <b>+200 نقطة</b> فور اشتراكه.
+          شارك رابط دعوتك الخاص؛ يحصل صديقك على مكافأة، وتحصل أنت على <b>+200 نقطة</b> فور اشتراكه.
         </p>
         <button class="btn-verify" onclick="copyLink()">📋 نسخ الرابط ومشاركته</button>
       </div>
@@ -776,30 +799,55 @@
       </div>
     </div>
 
-    <!-- 5. لوحة تحكم الأدمن (خاص بك وحدك - لا تظهر للعامة) -->
+    <!-- 5. لوحة تحكم الأدمن (خاصة بك 7300916931) -->
     <div id="tab-admin" class="tab-view">
-      <div class="custom-card" style="border-color: #ef4444; background: rgba(30, 8, 12, 0.95);">
-        <div class="card-title" style="color: #f87171; font-size: 16px;">🛡️ لوحة تحكم المسؤول (خاصة بك)</div>
-        <p style="font-size: 11px; color: #94a3b8; margin-bottom: 14px;">
-          أنت الآن في وضع المسؤول. هذه اللوحة مخفية تماماً عن المستخدمين العاديين.
-        </p>
-
-        <!-- قسم البث الإذاعي -->
-        <div style="border-top: 1px solid rgba(239,68,68,0.3); padding-top: 12px; margin-top: 10px;">
-          <div style="font-size: 13px; font-weight: 800; color: #fde047; margin-bottom: 4px;">📢 نظام البث العام (Broadcast)</div>
-          <p style="font-size: 11px; color: #cbd5e1;">اكتب الرسالة لنشرها لجميع مستخدمي البوت فوراً:</p>
-          <textarea id="broadcastText" class="admin-textarea" placeholder="اكتب نص الإذاعة أو الإعلان هنا..."></textarea>
-          <button class="btn-verify" onclick="sendAdminBroadcast()">🚀 إرسال الإذاعة للجميع عبر البوت</button>
-        </div>
-
-        <!-- قسم معلومات السحب -->
-        <div style="border-top: 1px solid rgba(239,68,68,0.3); padding-top: 12px; margin-top: 14px;">
-          <div style="font-size: 13px; font-weight: 800; color: #4ade80; margin-bottom: 4px;">💳 متابعة السحوبات</div>
-          <p style="font-size: 11px; color: #cbd5e1; line-height: 1.5;">
-            تصلك إشعارات السحب التفاعلية لحظياً داخل محادثة البوت الخاصة بحسابك، مرفقة بأزرار الموافقة ✅ والرفض مع إرجاع الرصيد ❌.
+      
+      <!-- القائمة الرئيسية للأدمن -->
+      <div id="adminMainView" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="custom-card" style="border-color: #ef4444; background: rgba(30, 8, 12, 0.95);">
+          <div class="card-title" style="color: #f87171; font-size: 16px;">🛡️ لوحة تحكم المسؤول (خاصة بك)</div>
+          <p style="font-size: 11px; color: #94a3b8; margin-bottom: 14px;">
+            أنت مسجل كمسؤول بصفتك صاحب الآيدي: <b>7300916931</b>.
           </p>
+
+          <!-- خانة توزيع الكودات المطلوبة -->
+          <div class="game-selection-card" style="margin-top: 10px; border-color: #f59e0b;" onclick="openAdminCodesView()">
+            <div class="game-info-left">
+              <div class="game-icon-box" style="background: rgba(245, 158, 11, 0.15); border-color:#f59e0b;">🎟️</div>
+              <div>
+                <div style="font-size: 15px; font-weight: 900; color: #fde047;">توزيع الكودات (Promo Codes)</div>
+                <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">إنشاء برومو كود وتوزيعه ونشره بالقناة مباشرة</div>
+              </div>
+            </div>
+            <div class="game-btn-play" style="background:#f59e0b; color:#000;">دخول ➔</div>
+          </div>
         </div>
       </div>
+
+      <!-- واجهة توزيع الكودات المنبثقة -->
+      <div id="adminCodesView" style="display: none; flex-direction: column; gap: 12px;">
+        <button class="game-back-btn" onclick="backToAdminMain()">➔ عودة للوحة الأدمن</button>
+        <div class="custom-card" style="border-color: #f59e0b; background: rgba(25, 12, 6, 0.95);">
+          <div class="card-title" style="color: #fde047; font-size: 16px; text-align: center;">🎟️ إدارة وتوزيع الكودات</div>
+          
+          <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 12px; margin: 12px 0; border: 1px dashed rgba(245, 158, 11, 0.4);">
+            <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;">الكود النشط حالياً:</div>
+            <div id="currentActiveCodeDisplay" style="font-size: 20px; font-weight: 900; color: #4ade80; letter-spacing: 2px;">لا يوجد كود نشط</div>
+            <div id="currentCodeDetails" style="font-size: 11px; color: #cbd5e1; margin-top: 4px;">اضغط على "إنشاء كود" لتوليد كود جديد</div>
+          </div>
+
+          <!-- الزران المطلوبان: إنشاء كود في اليسار و وزع في اليمين -->
+          <div style="display: flex; gap: 10px; margin-top: 14px;">
+            <button class="btn-verify" style="flex: 1; background: #3b82f6; margin-top: 0;" onclick="adminGenerateCodePrompt()">
+              ➕ إنشاء كود
+            </button>
+            <button class="btn-verify" style="flex: 1; background: #10b981; margin-top: 0;" onclick="adminPublishCodeToChannel()">
+              📢 وزّع في القناة
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- شريط التنقل السفلي -->
@@ -816,14 +864,14 @@
       <div class="nav-item" onclick="switchTab('tab-profile', this)">
         <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span>Profile</span>
       </div>
-      <!-- زر لوحة الأدمن (مخفي افتراضياً ويظهر لك وحدك برمجياً) -->
+      <!-- زر لوحة الأدمن (مضبوط على الآيدي الخاص بك) -->
       <div class="nav-item" id="adminNavItem" style="display: none; color: #f87171;" onclick="switchTab('tab-admin', this)">
         <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg><span>Admin</span>
       </div>
     </div>
   </div>
 
-  <!-- نافذة السحب المخصصة (Modal) -->
+  <!-- نافذة السحب المخصصة -->
   <div id="withdrawModal" class="custom-modal">
     <div class="modal-box">
       <h3 style="color:#ef4444; margin-bottom: 6px;">طلب سحب الأرباح</h3>
@@ -837,10 +885,8 @@
   </div>
 
   <script>
-    // ⚠️ استبدل هذا الرقم بالـ ID الحقيقي الخاص بحسابك في تيليجرام
-    const ADMIN_USER_ID = "123456789";
+    const ADMIN_USER_ID = "7300916931";
 
-    // ----------------- المؤثرات الصوتية والاهتزاز -----------------
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
     function playBeep(freq = 400, type = 'sine', duration = 0.1) {
@@ -884,7 +930,6 @@
       } catch(e) {}
     }
 
-    // ----------------- هوية المستخدم وبيانات تيليجرام -----------------
     let userId = null;
     let userName = "المستخدم";
     let userPhoto = "https://i.postimg.cc/0zLCLkCS/image.jpg";
@@ -910,7 +955,6 @@
       }
     }
 
-    // إظهار لوحة الأدمن لك وحدك
     function checkAdminPrivileges() {
       if (userId === ADMIN_USER_ID) {
         const adminTab = document.getElementById("adminNavItem");
@@ -942,13 +986,148 @@
     const STORAGE_KEY_TASKS = `miini_${userId}_completed_tasks`;
     const STORAGE_KEY_ONBOARDED = `miini_${userId}_onboarded`;
     const STORAGE_KEY_DAILY = `miini_${userId}_last_daily`;
+    const STORAGE_KEY_USED_PROMOS = `miini_${userId}_used_promos`;
 
     let userPoints = parseInt(localStorage.getItem(STORAGE_KEY_POINTS)) || 500;
     let completedTasks = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY_TASKS) || "[]"));
+    let usedPromos = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY_USED_PROMOS) || "[]"));
 
     function saveState() {
       localStorage.setItem(STORAGE_KEY_POINTS, userPoints.toString());
       localStorage.setItem(STORAGE_KEY_TASKS, JSON.stringify(Array.from(completedTasks)));
+      localStorage.setItem(STORAGE_KEY_USED_PROMOS, JSON.stringify(Array.from(usedPromos)));
+    }
+
+    // ----------------- نظام البرومو كود في الشاشة الرئيسية -----------------
+    function redeemPromoCode() {
+      const input = document.getElementById("promoInputMain");
+      const code = input.value.trim().toUpperCase();
+
+      if (!code) {
+        alert("يرجى إدخال الكود أولاً!");
+        return;
+      }
+
+      if (usedPromos.has(code)) {
+        triggerHaptic('error');
+        alert("⚠️ لقد استخدمت هذا الكود من قبل!");
+        return;
+      }
+
+      triggerHaptic('medium');
+      // فحص الكود عبر إرساله للبوت أو فحصه محلياً
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.sendData(JSON.stringify({
+          action: "redeem_promo",
+          code: code
+        }));
+      }
+
+      // التحقق المحلي السريع للأكواد المخزنة
+      const activeCodeData = JSON.parse(localStorage.getItem("miini_active_promo") || "null");
+      if (activeCodeData && activeCodeData.code === code) {
+        if (activeCodeData.usesLeft <= 0) {
+          triggerHaptic('error');
+          alert("⚠️ عذراً، انتهت صلاحية ومرات استخدام هذا الكود!");
+          return;
+        }
+
+        userPoints += activeCodeData.reward;
+        usedPromos.add(code);
+        activeCodeData.usesLeft--;
+        localStorage.setItem("miini_active_promo", JSON.stringify(activeCodeData));
+        saveState();
+        updateBalanceUI();
+        celebrateWin();
+        input.value = "";
+        alert(`🎉 مبروك! تم تفعيل الكود وإضافة +${activeCodeData.reward} نقطة إلى رصيدك!`);
+      } else {
+        triggerHaptic('error');
+        alert("❌ الكود غير صحيح أو منتهي الصلاحية!");
+      }
+    }
+
+    // ----------------- إدارة الكودات في لوحة الأدمن -----------------
+    function openAdminCodesView() {
+      triggerHaptic('light');
+      document.getElementById("adminMainView").style.display = "none";
+      document.getElementById("adminCodesView").style.display = "flex";
+      loadCurrentActiveCodeUI();
+    }
+
+    function backToAdminMain() {
+      triggerHaptic('light');
+      document.getElementById("adminCodesView").style.display = "none";
+      document.getElementById("adminMainView").style.display = "flex";
+    }
+
+    function loadCurrentActiveCodeUI() {
+      const activeCodeData = JSON.parse(localStorage.getItem("miini_active_promo") || "null");
+      const display = document.getElementById("currentActiveCodeDisplay");
+      const details = document.getElementById("currentCodeDetails");
+
+      if (activeCodeData && activeCodeData.usesLeft > 0) {
+        display.innerText = activeCodeData.code;
+        details.innerText = `قيمة الهدية: ${activeCodeData.reward} نقطة | المتبقي: ${activeCodeData.usesLeft} مستخدم`;
+      } else {
+        display.innerText = "لا يوجد كود نشط";
+        details.innerText = "اضغط على 'إنشاء كود' لتوليد كود جديد";
+      }
+    }
+
+    function adminGenerateCodePrompt() {
+      triggerHaptic('medium');
+      const rewardStr = prompt("أدخل قيمة النقاط لكل مستخدم (مثلاً: 250):", "250");
+      if (!rewardStr) return;
+      const reward = parseInt(rewardStr);
+
+      const usesStr = prompt("أدخل عدد المستخدمين المسموح لهم باستخدام الكود (مثلاً: 50):", "50");
+      if (!usesStr) return;
+      const uses = parseInt(usesStr);
+
+      if (isNaN(reward) || isNaN(uses) || reward <= 0 || uses <= 0) {
+        alert("يرجى إدخال أرقام صحيحة!");
+        return;
+      }
+
+      // توليد كود عشوائي تلقائياً
+      const randomCode = "MII-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+      const codeData = {
+        code: randomCode,
+        reward: reward,
+        usesLeft: uses,
+        totalUses: uses,
+        time: Date.now()
+      };
+
+      localStorage.setItem("miini_active_promo", JSON.stringify(codeData));
+      loadCurrentActiveCodeUI();
+      celebrateWin();
+      alert(`✅ تم إنشاء الكود بنجاح!\nالكود: ${randomCode}\nالمكافأة: ${reward} نقطة\nالعدد: ${uses} شخص`);
+    }
+
+    function adminPublishCodeToChannel() {
+      const activeCodeData = JSON.parse(localStorage.getItem("miini_active_promo") || "null");
+      if (!activeCodeData || activeCodeData.usesLeft <= 0) {
+        alert("⚠️ يرجى إنشاء كود صالح أولاً قبل نشره في القناة!");
+        return;
+      }
+
+      triggerHaptic('heavy');
+
+      // إرسال الكود للبوت ليقوم بنشره مباشرة بالقناة الرسمية
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.sendData(JSON.stringify({
+          action: "publish_promo",
+          code: activeCodeData.code,
+          reward: activeCodeData.reward,
+          uses: activeCodeData.usesLeft
+        }));
+        celebrateWin();
+        alert("🚀 تم إرسال الأمر للبوت! سيتم نشر الكود بالقناة الرسمية فوراً.");
+      } else {
+        alert(`📢 تم التوزيع!\nالكود: ${activeCodeData.code}\nالنقاط: ${activeCodeData.reward}`);
+      }
     }
 
     // ----------------- المكافأة اليومية -----------------
@@ -1396,7 +1575,7 @@
       }, 100);
     }
 
-    // ----------------- السحب والمودال والربط المباشر -----------------
+    // ----------------- السحب والمودال -----------------
     function openWithdrawModal() {
       if (userPoints < 5000) return;
       triggerHaptic('medium');
@@ -1416,7 +1595,6 @@
 
       triggerHaptic('success');
       
-      // إرسال البيانات فوراً إلى محادثة البوت لمراجعة الأدمن
       if (window.Telegram?.WebApp) {
         window.Telegram.WebApp.sendData(JSON.stringify({
           action: "withdraw",
@@ -1427,28 +1605,6 @@
       } else {
         alert("🎉 تم إرسال طلب السحب بنجاح للإدارة للمراجعة!");
         closeWithdrawModal();
-      }
-    }
-
-    // ----------------- إجراءات لوحة الأدمن -----------------
-    function sendAdminBroadcast() {
-      const msg = document.getElementById("broadcastText").value.trim();
-      if (!msg) {
-        alert("يرجى كتابة نص الرسالة أولاً!");
-        return;
-      }
-
-      triggerHaptic('medium');
-      if (window.Telegram?.WebApp) {
-        // إرسال أمر الإذاعة للبوت مباشرة
-        window.Telegram.WebApp.sendData(JSON.stringify({
-          action: "broadcast",
-          text: msg
-        }));
-        alert("🚀 جاري معالجة الإذاعة وإرسالها لكافة المشتركين عبر البوت!");
-        document.getElementById("broadcastText").value = "";
-      } else {
-        alert("⚠️ يرجى تشغيل التطبيق من داخل تيليجرام لتنفيذ الإذاعة.");
       }
     }
 
@@ -1466,6 +1622,7 @@
       document.getElementById(tabId).classList.add('active');
       nav.classList.add('active');
       if (tabId === 'tab-home') backToHomeMenu();
+      if (tabId === 'tab-admin') backToAdminMain();
     }
 
     function updateBalanceUI() {
@@ -1487,11 +1644,12 @@
       }
     }
 
-    // ----------------- التهيئة -----------------
     window.addEventListener('DOMContentLoaded', async () => {
       document.getElementById("username").innerText = userName;
       document.getElementById("welcomeUserName").innerText = userName;
       document.getElementById("userHeaderAvatar").src = userPhoto;
+
+      checkAdminPrivileges();
 
       const isAllowed = await enforceCloudMultiAccountProtection();
       if (!isAllowed) return;

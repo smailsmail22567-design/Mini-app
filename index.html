@@ -273,7 +273,6 @@
       margin-bottom: 8px;
     }
 
-    /* برومو كود الواجهة الرئيسية */
     .promo-input-group {
       display: flex;
       gap: 8px;
@@ -641,10 +640,10 @@
           <button id="dailyCheckinBtn" class="btn-check" style="background:#f59e0b; color:#000; border:none; padding: 6px 14px; font-weight:800;" onclick="claimDailyReward()">استلام</button>
         </div>
 
-        <!-- خانة البرومو كود في الشاشة الرئيسية لجميع المستخدمين -->
+        <!-- خانة البرومو كود في الشاشة الرئيسية لجميع اللاعبين -->
         <div class="custom-card" style="border-color: #a855f7;">
           <div class="card-title" style="color: #c084fc; margin-bottom: 4px;">🎟️ كود الهدية (Promo Code)</div>
-          <p style="font-size: 11px; color: #94a3b8;">أدخل كود المكافأة الخاص بك لشحن النقاط فوراً:</p>
+          <p style="font-size: 11px; color: #94a3b8;">أدخل كود المكافأة لشحن رصيد إضافي فوراً:</p>
           <div class="promo-input-group">
             <input type="text" id="promoInputMain" class="promo-input" placeholder="اكتب الكود هنا...">
             <button class="promo-btn" style="background:#a855f7;" onclick="redeemPromoCode()">تفعيل</button>
@@ -810,7 +809,6 @@
             أنت مسجل كمسؤول بصفتك صاحب الآيدي: <b>7300916931</b>.
           </p>
 
-          <!-- خانة توزيع الكودات المطلوبة -->
           <div class="game-selection-card" style="margin-top: 10px; border-color: #f59e0b;" onclick="openAdminCodesView()">
             <div class="game-info-left">
               <div class="game-icon-box" style="background: rgba(245, 158, 11, 0.15); border-color:#f59e0b;">🎟️</div>
@@ -824,19 +822,18 @@
         </div>
       </div>
 
-      <!-- واجهة توزيع الكودات المنبثقة -->
+      <!-- واجهة توزيع الكودات المنبثقة للأدمن -->
       <div id="adminCodesView" style="display: none; flex-direction: column; gap: 12px;">
         <button class="game-back-btn" onclick="backToAdminMain()">➔ عودة للوحة الأدمن</button>
         <div class="custom-card" style="border-color: #f59e0b; background: rgba(25, 12, 6, 0.95);">
           <div class="card-title" style="color: #fde047; font-size: 16px; text-align: center;">🎟️ إدارة وتوزيع الكودات</div>
           
           <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 12px; margin: 12px 0; border: 1px dashed rgba(245, 158, 11, 0.4);">
-            <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;">الكود النشط حالياً:</div>
-            <div id="currentActiveCodeDisplay" style="font-size: 20px; font-weight: 900; color: #4ade80; letter-spacing: 2px;">لا يوجد كود نشط</div>
+            <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;">الكود النشط سحابياً:</div>
+            <div id="currentActiveCodeDisplay" style="font-size: 20px; font-weight: 900; color: #4ade80; letter-spacing: 2px;">جاري الفحص...</div>
             <div id="currentCodeDetails" style="font-size: 11px; color: #cbd5e1; margin-top: 4px;">اضغط على "إنشاء كود" لتوليد كود جديد</div>
           </div>
 
-          <!-- الزران المطلوبان: إنشاء كود في اليسار و وزع في اليمين -->
           <div style="display: flex; gap: 10px; margin-top: 14px;">
             <button class="btn-verify" style="flex: 1; background: #3b82f6; margin-top: 0;" onclick="adminGenerateCodePrompt()">
               ➕ إنشاء كود
@@ -864,7 +861,6 @@
       <div class="nav-item" onclick="switchTab('tab-profile', this)">
         <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span>Profile</span>
       </div>
-      <!-- زر لوحة الأدمن (مضبوط على الآيدي الخاص بك) -->
       <div class="nav-item" id="adminNavItem" style="display: none; color: #f87171;" onclick="switchTab('tab-admin', this)">
         <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg><span>Admin</span>
       </div>
@@ -886,6 +882,8 @@
 
   <script>
     const ADMIN_USER_ID = "7300916931";
+    // رابط السحابة الموحدة لمزامنة الكود بين جميع اللاعبين
+    const CLOUD_PROMO_URL = "https://kvdb.io/4y9K3s5K2g5j6H7p9L1/miini_active_promo";
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
@@ -998,8 +996,8 @@
       localStorage.setItem(STORAGE_KEY_USED_PROMOS, JSON.stringify(Array.from(usedPromos)));
     }
 
-    // ----------------- نظام البرومو كود في الشاشة الرئيسية -----------------
-    function redeemPromoCode() {
+    // ----------------- نظام البرومو كود السحابي الشامل -----------------
+    async function redeemPromoCode() {
       const input = document.getElementById("promoInputMain");
       const code = input.value.trim().toUpperCase();
 
@@ -1010,40 +1008,51 @@
 
       if (usedPromos.has(code)) {
         triggerHaptic('error');
-        alert("⚠️ لقد استخدمت هذا الكود من قبل!");
+        alert("⚠️ لقد استلمت مكافأة هذا الكود من قبل!");
         return;
       }
 
       triggerHaptic('medium');
-      // فحص الكود عبر إرساله للبوت أو فحصه محلياً
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.sendData(JSON.stringify({
-          action: "redeem_promo",
-          code: code
-        }));
-      }
 
-      // التحقق المحلي السريع للأكواد المخزنة
-      const activeCodeData = JSON.parse(localStorage.getItem("miini_active_promo") || "null");
-      if (activeCodeData && activeCodeData.code === code) {
-        if (activeCodeData.usesLeft <= 0) {
+      try {
+        const res = await fetch(CLOUD_PROMO_URL + `?t=${Date.now()}`);
+        if (!res.ok) {
           triggerHaptic('error');
-          alert("⚠️ عذراً، انتهت صلاحية ومرات استخدام هذا الكود!");
+          alert("❌ الكود غير صحيح أو لا يوجد كود نشط حالياً!");
           return;
         }
 
-        userPoints += activeCodeData.reward;
-        usedPromos.add(code);
-        activeCodeData.usesLeft--;
-        localStorage.setItem("miini_active_promo", JSON.stringify(activeCodeData));
-        saveState();
-        updateBalanceUI();
-        celebrateWin();
-        input.value = "";
-        alert(`🎉 مبروك! تم تفعيل الكود وإضافة +${activeCodeData.reward} نقطة إلى رصيدك!`);
-      } else {
+        let activeCodeData = await res.json();
+
+        if (activeCodeData && activeCodeData.code === code) {
+          if (activeCodeData.usesLeft <= 0) {
+            triggerHaptic('error');
+            alert("⚠️ عذراً، انتهت المقاعد المخصصة لهذا الكود!");
+            return;
+          }
+
+          // خصم مقعد وتحديث السحابة
+          activeCodeData.usesLeft--;
+          await fetch(CLOUD_PROMO_URL, {
+            method: 'POST',
+            body: JSON.stringify(activeCodeData)
+          });
+
+          // إضافة الرصيد وحفظ الاستخدام
+          userPoints += activeCodeData.reward;
+          usedPromos.add(code);
+          saveState();
+          updateBalanceUI();
+          celebrateWin();
+          input.value = "";
+          alert(`🎉 مبروك! تم تفعيل الكود بنجاح وإضافة +${activeCodeData.reward} نقطة!`);
+        } else {
+          triggerHaptic('error');
+          alert("❌ الكود غير صحيح!");
+        }
+      } catch (e) {
         triggerHaptic('error');
-        alert("❌ الكود غير صحيح أو منتهي الصلاحية!");
+        alert("⚠️ حدث خطأ في الاتصال بالسيرفر، تأكد من الإنترنت وحاول ثانية!");
       }
     }
 
@@ -1061,36 +1070,41 @@
       document.getElementById("adminMainView").style.display = "flex";
     }
 
-    function loadCurrentActiveCodeUI() {
-      const activeCodeData = JSON.parse(localStorage.getItem("miini_active_promo") || "null");
+    async function loadCurrentActiveCodeUI() {
       const display = document.getElementById("currentActiveCodeDisplay");
       const details = document.getElementById("currentCodeDetails");
 
-      if (activeCodeData && activeCodeData.usesLeft > 0) {
-        display.innerText = activeCodeData.code;
-        details.innerText = `قيمة الهدية: ${activeCodeData.reward} نقطة | المتبقي: ${activeCodeData.usesLeft} مستخدم`;
-      } else {
-        display.innerText = "لا يوجد كود نشط";
-        details.innerText = "اضغط على 'إنشاء كود' لتوليد كود جديد";
-      }
+      try {
+        const res = await fetch(CLOUD_PROMO_URL + `?t=${Date.now()}`);
+        if (res.ok) {
+          const activeCodeData = await res.json();
+          if (activeCodeData && activeCodeData.usesLeft > 0) {
+            display.innerText = activeCodeData.code;
+            details.innerText = `الهدية: +${activeCodeData.reward} نقطة | المتبقي: ${activeCodeData.usesLeft} مستخدم`;
+            return;
+          }
+        }
+      } catch (e) {}
+
+      display.innerText = "لا يوجد كود نشط";
+      details.innerText = "اضغط على 'إنشاء كود' لتوليد كود جديد سحابياً";
     }
 
-    function adminGenerateCodePrompt() {
+    async function adminGenerateCodePrompt() {
       triggerHaptic('medium');
-      const rewardStr = prompt("أدخل قيمة النقاط لكل مستخدم (مثلاً: 250):", "250");
+      const rewardStr = prompt("أدخل قيمة النقاط لكل مستخدم (مثال: 250):", "250");
       if (!rewardStr) return;
       const reward = parseInt(rewardStr);
 
-      const usesStr = prompt("أدخل عدد المستخدمين المسموح لهم باستخدام الكود (مثلاً: 50):", "50");
+      const usesStr = prompt("أدخل عدد المستخدمين المسموح لهم (مثال: 50):", "50");
       if (!usesStr) return;
       const uses = parseInt(usesStr);
 
       if (isNaN(reward) || isNaN(uses) || reward <= 0 || uses <= 0) {
-        alert("يرجى إدخال أرقام صحيحة!");
+        alert("يرجى كتابة أرقام صحيحة!");
         return;
       }
 
-      // توليد كود عشوائي تلقائياً
       const randomCode = "MII-" + Math.random().toString(36).substring(2, 8).toUpperCase();
       const codeData = {
         code: randomCode,
@@ -1100,33 +1114,40 @@
         time: Date.now()
       };
 
-      localStorage.setItem("miini_active_promo", JSON.stringify(codeData));
-      loadCurrentActiveCodeUI();
-      celebrateWin();
-      alert(`✅ تم إنشاء الكود بنجاح!\nالكود: ${randomCode}\nالمكافأة: ${reward} نقطة\nالعدد: ${uses} شخص`);
+      try {
+        await fetch(CLOUD_PROMO_URL, {
+          method: 'POST',
+          body: JSON.stringify(codeData)
+        });
+        loadCurrentActiveCodeUI();
+        celebrateWin();
+        alert(`✅ تم إنشاء وحفظ الكود سحابياً للجميع!\nالكود: ${randomCode}\nالنقاط: +${reward}\nالمقاعد: ${uses}`);
+      } catch (err) {
+        alert("⚠️ تعذر رفع الكود للسحابة، تحقق من الاتصال بالإنترنت.");
+      }
     }
 
-    function adminPublishCodeToChannel() {
-      const activeCodeData = JSON.parse(localStorage.getItem("miini_active_promo") || "null");
+    async function adminPublishCodeToChannel() {
+      let activeCodeData = null;
+      try {
+        const res = await fetch(CLOUD_PROMO_URL + `?t=${Date.now()}`);
+        if (res.ok) activeCodeData = await res.json();
+      } catch (e) {}
+
       if (!activeCodeData || activeCodeData.usesLeft <= 0) {
-        alert("⚠️ يرجى إنشاء كود صالح أولاً قبل نشره في القناة!");
+        alert("⚠️ يرجى إنشاء كود سحابي جديد أولاً قبل النشر!");
         return;
       }
 
       triggerHaptic('heavy');
 
-      // إرسال الكود للبوت ليقوم بنشره مباشرة بالقناة الرسمية
+      const postText = `🎁 كود هدية جديد وحصري! 🎁\n\n💎 القيمة: +${activeCodeData.reward} نقطة\n👥 متاح لأول: ${activeCodeData.usesLeft} مستخدم\n\n🔑 الكود:\n${activeCodeData.code}\n\nسارع بالدخول للتطبيق وتفعيل الكود من الشاشة الرئيسية! 👇\nhttps://t.me/H_E_I_A`;
+      const shareUrl = `https://t.me/share/url?url=https://t.me/Mii_ni_bot&text=${encodeURIComponent(postText)}`;
+      
       if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.sendData(JSON.stringify({
-          action: "publish_promo",
-          code: activeCodeData.code,
-          reward: activeCodeData.reward,
-          uses: activeCodeData.usesLeft
-        }));
-        celebrateWin();
-        alert("🚀 تم إرسال الأمر للبوت! سيتم نشر الكود بالقناة الرسمية فوراً.");
+        window.Telegram.WebApp.openTelegramLink(shareUrl);
       } else {
-        alert(`📢 تم التوزيع!\nالكود: ${activeCodeData.code}\nالنقاط: ${activeCodeData.reward}`);
+        window.open(shareUrl, "_blank");
       }
     }
 
@@ -1157,7 +1178,7 @@
       checkDailyRewardStatus();
     }
 
-    // ----------------- التحقق الأولي والقنوات -----------------
+    // ----------------- التحقق الأولي -----------------
     let clickedChannels = { c1: false, c2: false };
     function markChannelClicked(ch) {
       clickedChannels[ch] = true;
@@ -1318,16 +1339,6 @@
           ctx.fillStyle = "#ffffff";
           ctx.fill();
         }
-        ctx.restore();
-
-        ctx.save();
-        ctx.translate(240, 240);
-        ctx.rotate(midAngle);
-        ctx.beginPath();
-        ctx.arc(radiusDist, 0, avatarSize / 2, 0, Math.PI * 2);
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = "#ffffff";
-        ctx.stroke();
         ctx.restore();
 
         currentAngle += slice;
@@ -1694,3 +1705,4 @@
   </script>
 </body>
 </html>
+

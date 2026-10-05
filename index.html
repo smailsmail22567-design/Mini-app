@@ -24,7 +24,7 @@
       color: #ffffff;
     }
 
-    /* 1. واجهة التحقق من الجهاز (الشاشة الزرقاء) */
+    /* واجهة فحص الجهاز الزرقاء */
     #verify-screen {
       position: fixed;
       inset: 0;
@@ -107,7 +107,7 @@
       max-width: 290px;
     }
 
-    /* 2. شاشة الاشتراك الإجباري */
+    /* شاشة الاشتراك الإجباري */
     #splash-screen {
       position: absolute;
       inset: 0;
@@ -230,7 +230,7 @@
       margin-top: 4px;
     }
 
-    /* 3. الشاشة الرئيسية للتطبيق */
+    /* الشاشة الرئيسية للتطبيق */
     #main-container {
       position: absolute;
       inset: 0;
@@ -614,7 +614,7 @@
 </head>
 <body>
 
-  <!-- 1. واجهة التحقق من الجهاز كأول شاشة تظهر -->
+  <!-- 1. شاشة التحقق الزرقاء -->
   <div id="verify-screen">
     <div class="v-title">Device<br>Verification</div>
     <div class="v-status" id="vStatus">Verifying Device...</div>
@@ -639,7 +639,7 @@
     </div>
   </div>
 
-  <!-- 3. الشاشة الرئيسية للتطبيق المصغر -->
+  <!-- 3. الشاشة الرئيسية للتطبيق -->
   <div id="main-container">
     <div class="user-card">
       <div class="user-info">
@@ -983,7 +983,7 @@
       statusEl.className = "v-status";
       statusEl.innerText = "Verification Successful!";
       btnEl.className = "v-btn";
-      btnEl.innerText = "Continue to App";
+      btnEl.innerText = "Return to Bot";
     }
 
     function displayVerificationBlock() {
@@ -999,12 +999,14 @@
       btnEl.innerText = "Device Blocked";
     }
 
+    // الدخول الفوري للتطبيق عند الضغط على الزر
     function handleVerificationButtonClick() {
       if (!isDeviceAllowed) {
         alert("⛔ هذا الجهاز مقفل بحساب آخر مسجل مسبقاً.");
         return;
       }
 
+      // إخفاء شاشة الفحص وفتح التطبيق فوراً
       document.getElementById("verify-screen").style.display = "none";
       loadAppMainFlow();
     }
@@ -1108,7 +1110,7 @@
       const del = requiredChannels.splice(idx, 1);
       saveState();
       renderChannelsUI();
-      alert(`🗑️ تم حذف القناة (${del[0].title})!`);
+      alert(`🗑️️ تم حذف القناة (${del[0].title})!`);
     }
 
     let clickedChannels = {};

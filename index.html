@@ -3,331 +3,254 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>تطبيق الربح</title>
+<title>تطبيق الربح الاحترافي</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root {
-    --bg: #1c1c1e;
-    --card: #2c2c2e;
-    --card-2: #3a3a3c;
+    --bg: #0f1015;
+    --card: #181922;
     --text: #ffffff;
-    --muted: #8e8e93;
-    --accent: #0a84ff;
-    --gold-1: #ffd700;
-    --gold-2: #b8860b;
-    --green: #30d158;
-    --red: #ff453a;
+    --muted: #94a3b8;
+    --accent: #2563eb;
+    --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    --gold: #f59e0b;
+    --gold-gradient: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+    --red: #ef4444;
+    --border: rgba(255, 255, 255, 0.08);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; min-height: 100%; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); }
   body {
-    font-family: -apple-system, "Segoe UI", Tahoma, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 24px);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 80px);
     display: flex; flex-direction: column; align-items: center;
   }
-  .wrap { width: 100%; max-width: 380px; }
+  .wrap { width: 100%; max-width: 420px; }
+  .hidden { display: none !important; }
+
   .card {
-    background: var(--card); border-radius: 16px; padding: 16px;
-    margin-bottom: 14px; text-align: center;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px; padding: 20px; margin-bottom: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
   }
-  .title { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
-  #balance { font-size: 34px; font-weight: 800; letter-spacing: .5px; }
+  
+  .balance-card { text-align: center; position: relative; overflow: hidden; }
+  .title { font-size: 13px; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+  #balance { font-size: 38px; font-weight: 800; letter-spacing: .5px; background: linear-gradient(to right, #fff, #cbd5e1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
+  .coin-container { display: flex; flex-direction: column; align-items: center; margin: 24px 0; }
   #coin {
-    display: block; margin: 8px auto 14px;
-    width: 190px; height: 190px; border-radius: 50%; border: none; cursor: pointer;
-    background: radial-gradient(circle at 35% 30%, var(--gold-1), var(--gold-2));
-    box-shadow: 0 12px 32px rgba(255, 215, 0, .28);
-    font-size: 72px; user-select: none;
-    transition: transform .08s ease;
+    width: 200px; height: 200px; border-radius: 50%; border: none; cursor: pointer;
+    background: var(--gold-gradient);
+    box-shadow: 0 15px 35px rgba(245, 158, 11, 0.3), inset 0 2px 6px rgba(255,255,255,0.4);
+    font-size: 80px; user-select: none; display: flex; align-items: center; justify-content: center;
+    transition: transform 0.05s ease;
   }
-  #coin:active:not(:disabled) { transform: scale(.94); }
-  #coin:disabled { opacity: .8; cursor: default; }
+  #coin:active { transform: scale(0.92); }
 
-  .energy-bar {
-    width: 100%; height: 12px; background: var(--card-2);
-    border-radius: 999px; overflow: hidden; margin-top: 8px;
-  }
-  #energyFill {
-    height: 100%; width: 0%;
-    background: linear-gradient(90deg, var(--green), #34c759);
-    transition: width .3s ease;
-  }
-  #energyText { font-size: 14px; color: var(--muted); }
+  .energy-container { width: 100%; margin-top: 12px; }
+  .energy-info { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .energy-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 999px; overflow: hidden; }
+  #energyFill { height: 100%; width: 100%; background: var(--accent-gradient); border-radius: 999px; transition: width 0.3s ease; }
 
   .btn {
-    background: var(--accent); color: #fff; border: none; border-radius: 12px;
-    padding: 11px 16px; font-size: 15px; font-weight: 600; cursor: pointer;
-    width: 100%;
+    background: var(--accent-gradient); color: #fff; border: none; border-radius: 14px;
+    padding: 12px 20px; font-size: 15px; font-weight: 600; cursor: pointer;
+    width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
   }
-  .btn:disabled { background: #555; cursor: default; }
-  .btn.small { width: auto; padding: 8px 14px; font-size: 14px; }
+  .btn.small { width: auto; padding: 8px 14px; font-size: 13px; }
+  .btn.admin-btn { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); }
 
-  .section-title { font-size: 15px; font-weight: 700; margin-bottom: 10px; text-align: right; }
-  .muted { color: var(--muted); font-size: 13px; }
-
+  .section-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .muted { color: var(--muted); font-size: 13px; line-height: 1.5; }
+  
   .task {
     display: flex; justify-content: space-between; align-items: center;
-    gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--card-2);
+    gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border);
   }
-  .task:last-child { border-bottom: none; }
-  .task-name { text-align: right; font-size: 15px; }
-  .task-reward { color: var(--gold-1); font-size: 13px; }
+  .task-info { text-align: right; flex: 1; }
+  .task-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .task-reward { color: var(--gold); font-size: 12px; font-weight: 500; }
 
-  .ref-link {
-    font-size: 12px; color: var(--muted); word-break: break-all;
-    background: var(--card-2); border-radius: 10px; padding: 10px;
-    margin: 10px 0; direction: ltr; text-align: left;
+  .ref-box {
+    background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px; margin: 12px 0; font-size: 12px; color: var(--muted);
+    word-break: break-all; direction: ltr; text-align: left;
   }
-  .row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+  .row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
 
-  #status {
-    min-height: 22px; font-size: 14px; color: var(--muted);
-    text-align: center; margin-top: 4px;
+  /* شريط التنقل السفلي */
+  .nav-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(24, 25, 34, 0.95); backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border); display: flex; flex-direction: row-reverse;
+    justify-content: space-around; padding: 10px 0 calc(env(safe-area-inset-bottom, 0px) + 10px); z-index: 100;
+  }
+  .nav-item {
+    background: none; border: none; color: var(--muted); font-size: 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer;
+    flex: 1; transition: color 0.2s;
+  }
+  .nav-item.active { color: var(--accent); }
+  .nav-item span.icon { font-size: 20px; }
+
+  .form-group { margin-bottom: 12px; text-align: right; }
+  .form-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .input-field {
+    width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px; color: #fff; font-size: 14px;
   }
 
   .float {
-    position: fixed; pointer-events: none; font-weight: 800; font-size: 22px;
-    color: var(--gold-1); animation: rise .7s ease-out forwards; z-index: 10;
+    position: fixed; pointer-events: none; font-weight: 800; font-size: 24px;
+    color: var(--gold); animation: rise 0.8s ease-out forwards; z-index: 1000;
   }
   @keyframes rise {
-    from { opacity: 1; transform: translateY(0); }
-    to   { opacity: 0; transform: translateY(-70px); }
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to   { opacity: 0; transform: translateY(-80px) scale(1.2); }
   }
 </style>
 </head>
 <body>
+
 <div class="wrap">
-
-  <div class="card">
-    <div class="title">رصيدك</div>
-    <div id="balance">🪙 0</div>
-  </div>
-
-  <button id="coin" aria-label="اضغط للربح">🪙</button>
-
-  <div class="card">
-    <div id="energyText">⚡ الطاقة: --</div>
-    <div class="energy-bar"><div id="energyFill"></div></div>
-  </div>
-
-  <div class="card">
-    <div class="section-title">🎁 تسجيل الدخول اليومي</div>
-    <button id="checkin" class="btn" disabled>جارٍ التحميل...</button>
-    <div id="streak" class="muted" style="margin-top:8px"></div>
-  </div>
-
-  <div class="card">
-    <div class="section-title">📋 المهام</div>
-    <div id="tasks"><div class="muted">جارٍ التحميل...</div></div>
-  </div>
-
-  <div class="card">
-    <div class="section-title">👥 الإحالات</div>
-    <div class="muted">شارك رابطك، وتُحسب الإحالة بعد أن يلعب صديقك 10 ضغطات.</div>
-    <div id="refLink" class="ref-link">--</div>
-    <button id="copy" class="btn">نسخ الرابط</button>
-    <div class="row">
-      <span class="muted">الإحالات المفعّلة</span>
-      <b id="refs">0</b>
+  <!-- تبويب الرئيسية -->
+  <div id="tab-home" class="tab-content">
+    <div class="card balance-card">
+      <div class="title">إجمالي الرصيد</div>
+      <div id="balance">🪙 0</div>
+    </div>
+    <div class="coin-container">
+      <button id="coin" aria-label="اضغط للربح">🪙</button>
+      <div class="energy-container">
+        <div class="energy-info">
+          <span id="energyText">⚡ الطاقة: 100 / 100</span>
+          <span>تعبئة تلقائية</span>
+        </div>
+        <div class="energy-bar"><div id="energyFill"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">🎁 تسجيل الدخول اليومي</div>
+      <button id="checkin" class="btn">تسجيل الحضور اليومي</button>
+      <div id="streak" class="muted" style="margin-top:8px; text-align: center;">سلسلة الأيام: 1 🔥</div>
     </div>
   </div>
 
-  <div id="status"></div>
+  <!-- تبويب المهام -->
+  <div id="tab-tasks" class="tab-content hidden">
+    <div class="card">
+      <div class="section-title">📋 المهام المتاحة</div>
+      <div id="tasksList">
+        <div class="task">
+          <div class="task-info">
+            <div class="task-name">انضم لقناة البوت الرسمية</div>
+            <div class="task-reward">+500 🪙</div>
+          </div>
+          <button class="btn small" onclick="alert('تم إنجاز المهمة بنجاح!')">تحقق</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- تبويب الأصدقاء -->
+  <div id="tab-frens" class="tab-content hidden">
+    <div class="card">
+      <div class="section-title">👥 دعوة الأصدقاء</div>
+      <div class="muted">شارك رابطك واحصل على مكافأة عن كل صديق.</div>
+      <div class="ref-box" id="myRefLink">https://t.me/Bot?start=ref7300916931</div>
+      <button class="btn" onclick="navigator.clipboard.writeText('https://t.me/Bot?start=ref7300916931'); alert('تم نسخ الرابط!');">نسخ الرابط</button>
+      <div class="row">
+        <span class="muted">الإحالات المفعّلة</span>
+        <b>0</b>
+      </div>
+    </div>
+  </div>
+
+  <!-- تبويب الأدمن (ظاهر مباشرة للمالك) -->
+  <div id="tab-admin" class="tab-content hidden">
+    <div class="card" style="border-color: rgba(239, 68, 68, 0.4);">
+      <div class="section-title" style="color: var(--red);">⚙️ لوحة تحكم المشرف (ID: 7300916931)</div>
+      <div class="form-group">
+        <label>عنوان المهمة الجديدة</label>
+        <input type="text" id="newTitle" class="input-field" placeholder="مثال: اشترك في القناة">
+      </div>
+      <div class="form-group">
+        <label>مكافأة النقاط</label>
+        <input type="number" id="newReward" class="input-field" placeholder="100">
+      </div>
+      <button class="btn admin-btn" onclick="addNewTask()">إضافة المهمة للنظام</button>
+    </div>
+  </div>
 </div>
 
-<script>
-  // اتركه فارغاً إذا كانت الصفحة تُفتح من نفس خادم البوت.
-  // إذا استضفت الصفحة على مكان آخر (مثل GitHub Pages) ضع هنا رابط الخادم.
-  const API_BASE = "";
+<!-- شريط التنقل السفلي -->
+<nav class="nav-bar">
+  <button class="nav-item" onclick="switchTab('admin', this)">
+    <span class="icon">⚙️</span>
+    <span>الأدمن</span>
+  </button>
+  <button class="nav-item" onclick="switchTab('frens', this)">
+    <span class="icon">👥</span>
+    <span>الأصدقاء</span>
+  </button>
+  <button class="nav-item" onclick="switchTab('tasks', this)">
+    <span class="icon">📋</span>
+    <span>المهام</span>
+  </button>
+  <button class="nav-item active" onclick="switchTab('home', this)">
+    <span class="icon">🏠</span>
+    <span>الرئيسية</span>
+  </button>
+</nav>
 
+<script>
   const tg = window.Telegram?.WebApp;
   tg?.ready();
   tg?.expand();
 
-  const initData = tg?.initData || "";
-  const $ = (id) => document.getElementById(id);
-
-  const coin = $("coin");
-  let busy = false;
-  let maxEnergy = 100;
-  let refLink = "";
-
-  const MESSAGES = {
-    no_energy: "نفدت الطاقة، انتظر قليلاً",
-    banned: "الحساب محظور",
-    under_review: "الحساب قيد المراجعة",
-    not_registered: "أرسل /start للبوت أولاً",
-    auth: "أعد فتح التطبيق من البوت",
-    already_checked: "سجلت دخولك اليوم بالفعل",
-    not_joined: "لم تنضم للقناة بعد",
-    already_done: "أنجزت هذه المهمة من قبل",
-    check_failed: "تعذر التحقق، حاول لاحقاً",
-    task_not_found: "المهمة غير متاحة",
-    bad_request: "طلب غير صالح",
-  };
-
-  function say(text) { $("status").textContent = text || ""; }
-
-  function notify(text) {
-    if (!text) return;
-    if (tg?.showAlert) tg.showAlert(text);
-    else say(text);
+  function switchTab(tabName, el) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+    el.classList.add('active');
   }
 
-  async function call(path, body) {
-    const options = body === undefined
-      ? { headers: { "X-Init-Data": initData } }
-      : {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...body, initData }),
-        };
-    const res = await fetch(API_BASE + path, options);
-    return res.json();
-  }
-
-  function renderEnergy(energy) {
-    const pct = Math.max(0, Math.min(100, (energy / maxEnergy) * 100));
-    $("energyFill").style.width = pct + "%";
-    $("energyText").textContent = `⚡ الطاقة: ${energy} / ${maxEnergy}`;
-  }
-
-  function renderMe(d) {
-    maxEnergy = d.max_energy;
-    $("balance").textContent = "🪙 " + d.balance;
-    renderEnergy(d.energy);
-    $("streak").textContent = `سلسلة الأيام: ${d.streak}`;
-    $("checkin").disabled = d.checked_today;
-    $("checkin").textContent = d.checked_today ? "✅ سجلت اليوم" : "تسجيل الدخول اليومي";
-    refLink = d.ref_link;
-    $("refLink").textContent = refLink;
-    $("refs").textContent = d.referrals;
-  }
-
-  async function loadMe() {
-    try {
-      const d = await call("/api/me");
-      if (d.ok) { renderMe(d); say(""); }
-      else say(MESSAGES[d.reason] || "تعذر تحميل البيانات");
-    } catch {
-      say("تعذر الاتصال بالخادم");
-    }
-  }
-
-  async function loadTasks() {
-    const box = $("tasks");
-    try {
-      const d = await call("/api/tasks");
-      box.innerHTML = "";
-      if (!d.ok) { box.textContent = MESSAGES[d.reason] || "تعذر تحميل المهام"; return; }
-      if (!d.tasks.length) {
-        box.innerHTML = '<div class="muted">لا توجد مهام الآن</div>';
-        return;
-      }
-      for (const t of d.tasks) {
-        const row = document.createElement("div");
-        row.className = "task";
-
-        const info = document.createElement("div");
-        const name = document.createElement("div");
-        name.className = "task-name";
-        name.textContent = t.title;
-        const reward = document.createElement("div");
-        reward.className = "task-reward";
-        reward.textContent = `+${t.reward} 🪙`;
-        info.append(name, reward);
-
-        const btn = document.createElement("button");
-        btn.className = "btn small";
-        btn.textContent = t.done ? "✅" : "تحقق";
-        btn.disabled = t.done;
-        btn.onclick = () => completeTask(t.id);
-
-        row.append(info, btn);
-        box.append(row);
-      }
-    } catch {
-      box.textContent = "تعذر الاتصال بالخادم";
-    }
-  }
-
-  async function completeTask(id) {
-    const d = await call("/api/task", { task_id: id });
-    if (d.ok) {
-      say(`🎉 حصلت على +${d.reward}`);
-      await Promise.all([loadMe(), loadTasks()]);
-    } else {
-      notify(MESSAGES[d.reason] || "حدث خطأ");
-    }
-  }
-
-  function floatText() {
-    const rect = coin.getBoundingClientRect();
-    const el = document.createElement("div");
-    el.className = "float";
-    el.textContent = "+1";
-    el.style.left = rect.left + rect.width / 2 - 10 + "px";
-    el.style.top = rect.top + "px";
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 700);
-  }
-
-  coin.addEventListener("click", async () => {
-    if (busy) return;
-    busy = true;
-    coin.disabled = true;
-    floatText();
-    try {
-      const d = await call("/api/tap", {});
-      if (d.ok) {
-        $("balance").textContent = "🪙 " + d.balance;
-        renderEnergy(d.energy);
-        tg?.HapticFeedback?.impactOccurred("light");
-        say("");
-      } else if (d.reason !== "too_fast") {
-        notify(MESSAGES[d.reason] || "حدث خطأ");
-      }
-    } catch {
-      say("تعذر الاتصال بالخادم");
-    } finally {
-      busy = false;
-      coin.disabled = false;
+  let balance = 0;
+  let energy = 100;
+  const coin = document.getElementById('coin');
+  
+  coin.addEventListener("click", (e) => {
+    if (energy > 0) {
+      balance += 1;
+      energy -= 1;
+      document.getElementById('balance').textContent = "🪙 " + balance;
+      document.getElementById('energyText').textContent = `⚡ الطاقة: ${energy} / 100`;
+      document.getElementById('energyFill').style.width = energy + "%";
+      tg?.HapticFeedback?.impactOccurred("light");
     }
   });
 
-  $("checkin").addEventListener("click", async () => {
-    const btn = $("checkin");
-    btn.disabled = true;
-    try {
-      const d = await call("/api/checkin", {});
-      if (d.ok) {
-        say(`🎁 +${d.reward} | سلسلة: ${d.streak}`);
-        await loadMe();
-      } else {
-        notify(MESSAGES[d.reason] || "حدث خطأ");
-        btn.disabled = false;
-      }
-    } catch {
-      say("تعذر الاتصال بالخادم");
-      btn.disabled = false;
-    }
-  });
-
-  $("copy").addEventListener("click", async () => {
-    if (!refLink) return;
-    try {
-      await navigator.clipboard.writeText(refLink);
-      say("تم نسخ الرابط");
-    } catch {
-      say(refLink);
-    }
-  });
-
-  loadMe();
-  loadTasks();
+  function addNewTask() {
+    const title = document.getElementById('newTitle').value;
+    const reward = document.getElementById('newReward').value;
+    if(!title || !reward) { alert('الرجاء تعبئة الحقول'); return; }
+    
+    const list = document.getElementById('tasksList');
+    list.innerHTML += `
+      <div class="task">
+        <div class="task-info">
+          <div class="task-name">${title}</div>
+          <div class="task-reward">+${reward} 🪙</div>
+        </div>
+        <button class="btn small" onclick="alert('تم إنجاز المهمة!')">تحقق</button>
+      </div>
+    `;
+    alert('تمت إضافة المهمة بنجاح!');
+    document.getElementById('newTitle').value = '';
+    document.getElementById('newReward').value = '';
+  }
 </script>
 </body>
 </html>

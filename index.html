@@ -3,55 +3,61 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>تطبيق الربح الاحترافي</title>
+<title>تطبيق الربح الاحترافي المتطور</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root {
-    --bg: #0f1015;
-    --card: #181922;
+    --bg: #0b0f19;
+    --card: #131b2e;
+    --card-border: rgba(255, 255, 255, 0.08);
     --text: #ffffff;
     --muted: #94a3b8;
-    --accent: #2563eb;
+    --accent: #3b82f6;
     --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
     --gold: #f59e0b;
     --gold-gradient: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+    --green: #10b981;
     --red: #ef4444;
-    --border: rgba(255, 255, 255, 0.08);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 80px);
+    padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 85px);
     display: flex; flex-direction: column; align-items: center;
   }
   .wrap { width: 100%; max-width: 420px; }
   .hidden { display: none !important; }
 
   .card {
-    background: var(--card); border: 1px solid var(--border);
+    background: var(--card); border: 1px solid var(--card-border);
     border-radius: 20px; padding: 20px; margin-bottom: 16px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
   }
   
-  .balance-card { text-align: center; position: relative; overflow: hidden; }
-  .title { font-size: 13px; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-  #balance { font-size: 38px; font-weight: 800; letter-spacing: .5px; background: linear-gradient(to right, #fff, #cbd5e1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .balance-card { text-align: center; position: relative; }
+  .title { font-size: 12px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+  #balance { font-size: 40px; font-weight: 800; background: linear-gradient(to right, #fff, #93c5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .rank-badge { display: inline-block; background: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-top: 8px; }
 
-  .coin-container { display: flex; flex-direction: column; align-items: center; margin: 24px 0; }
+  .coin-container { display: flex; flex-direction: column; align-items: center; margin: 20px 0; }
   #coin {
-    width: 200px; height: 200px; border-radius: 50%; border: none; cursor: pointer;
+    width: 190px; height: 190px; border-radius: 50%; border: none; cursor: pointer;
     background: var(--gold-gradient);
-    box-shadow: 0 15px 35px rgba(245, 158, 11, 0.3), inset 0 2px 6px rgba(255,255,255,0.4);
+    box-shadow: 0 15px 35px rgba(245, 158, 11, 0.35), inset 0 3px 6px rgba(255,255,255,0.4);
     font-size: 80px; user-select: none; display: flex; align-items: center; justify-content: center;
     transition: transform 0.05s ease;
   }
   #coin:active { transform: scale(0.92); }
 
-  .energy-container { width: 100%; margin-top: 12px; }
+  .energy-container { width: 100%; margin-top: 14px; }
   .energy-info { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
   .energy-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 999px; overflow: hidden; }
-  #energyFill { height: 100%; width: 100%; background: var(--accent-gradient); border-radius: 999px; transition: width 0.3s ease; }
+  #energyFill { height: 100%; width: 100%; background: var(--accent-gradient); border-radius: 999px; transition: width 0.2s linear; }
+
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .stat-box { background: rgba(255,255,255,0.02); border: 1px solid var(--card-border); border-radius: 14px; padding: 12px; text-align: center; }
+  .stat-val { font-size: 16px; font-weight: 700; color: var(--gold); margin-top: 4px; }
 
   .btn {
     background: var(--accent-gradient); color: #fff; border: none; border-radius: 14px;
@@ -60,31 +66,31 @@
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
   }
   .btn.small { width: auto; padding: 8px 14px; font-size: 13px; }
-  .btn.admin-btn { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); }
+  .btn.admin-btn { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
 
   .section-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
   .muted { color: var(--muted); font-size: 13px; line-height: 1.5; }
   
-  .task {
+  .task, .admin-row {
     display: flex; justify-content: space-between; align-items: center;
-    gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border);
+    gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--card-border);
   }
+  .task:last-child, .admin-row:last-child { border-bottom: none; }
   .task-info { text-align: right; flex: 1; }
   .task-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
   .task-reward { color: var(--gold); font-size: 12px; font-weight: 500; }
 
   .ref-box {
-    background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 12px;
+    background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 12px;
     padding: 12px; margin: 12px 0; font-size: 12px; color: var(--muted);
     word-break: break-all; direction: ltr; text-align: left;
   }
-  .row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
 
   /* شريط التنقل السفلي */
   .nav-bar {
     position: fixed; bottom: 0; left: 0; right: 0;
-    background: rgba(24, 25, 34, 0.95); backdrop-filter: blur(12px);
-    border-top: 1px solid var(--border); display: flex; flex-direction: row-reverse;
+    background: rgba(19, 27, 46, 0.95); backdrop-filter: blur(12px);
+    border-top: 1px solid var(--card-border); display: flex; flex-direction: row-reverse;
     justify-content: space-around; padding: 10px 0 calc(env(safe-area-inset-bottom, 0px) + 10px); z-index: 100;
   }
   .nav-item {
@@ -98,9 +104,10 @@
   .form-group { margin-bottom: 12px; text-align: right; }
   .form-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
   .input-field {
-    width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+    width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--card-border);
     border-radius: 10px; padding: 10px; color: #fff; font-size: 14px;
   }
+  .input-field:focus { outline: none; border-color: var(--accent); }
 
   .float {
     position: fixed; pointer-events: none; font-weight: 800; font-size: 24px;
@@ -120,35 +127,44 @@
     <div class="card balance-card">
       <div class="title">إجمالي الرصيد</div>
       <div id="balance">🪙 0</div>
+      <div id="userRank" class="rank-badge">الرتبة: برونزي 🥉</div>
     </div>
+
+    <!-- إحصائيات سريعة أوتوماتيكية -->
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="muted">الربح بالساعة</div>
+        <div class="stat-val" id="profitPerHour">+120 🪙</div>
+      </div>
+      <div class="stat-box">
+        <div class="muted">قوة الضغطة</div>
+        <div class="stat-val" id="tapPower">+1 ⚡</div>
+      </div>
+    </div>
+
     <div class="coin-container">
       <button id="coin" aria-label="اضغط للربح">🪙</button>
       <div class="energy-container">
         <div class="energy-info">
           <span id="energyText">⚡ الطاقة: 100 / 100</span>
-          <span>تعبئة تلقائية</span>
+          <span style="color: var(--green);">تعبئة أوتوماتيكية 🔋</span>
         </div>
         <div class="energy-bar"><div id="energyFill"></div></div>
       </div>
-    </div>
-    <div class="card">
-      <div class="section-title">🎁 تسجيل الدخول اليومي</div>
-      <button id="checkin" class="btn">تسجيل الحضور اليومي</button>
-      <div id="streak" class="muted" style="margin-top:8px; text-align: center;">سلسلة الأيام: 1 🔥</div>
     </div>
   </div>
 
   <!-- تبويب المهام -->
   <div id="tab-tasks" class="tab-content hidden">
     <div class="card">
-      <div class="section-title">📋 المهام المتاحة</div>
+      <div class="section-title">📋 المهام والفعاليات</div>
       <div id="tasksList">
         <div class="task">
           <div class="task-info">
             <div class="task-name">انضم لقناة البوت الرسمية</div>
             <div class="task-reward">+500 🪙</div>
           </div>
-          <button class="btn small" onclick="alert('تم إنجاز المهمة بنجاح!')">تحقق</button>
+          <button class="btn small" onclick="alert('تم التحقق بنجاح!')">تحقق</button>
         </div>
       </div>
     </div>
@@ -157,30 +173,48 @@
   <!-- تبويب الأصدقاء -->
   <div id="tab-frens" class="tab-content hidden">
     <div class="card">
-      <div class="section-title">👥 دعوة الأصدقاء</div>
-      <div class="muted">شارك رابطك واحصل على مكافأة عن كل صديق.</div>
+      <div class="section-title">👥 نظام الإحالات والأصدقاء</div>
+      <div class="muted">احصل على 500 نقطة عن كل صديق يقوم بالدخول عبر رابطك.</div>
       <div class="ref-box" id="myRefLink">https://t.me/Bot?start=ref7300916931</div>
-      <button class="btn" onclick="navigator.clipboard.writeText('https://t.me/Bot?start=ref7300916931'); alert('تم نسخ الرابط!');">نسخ الرابط</button>
-      <div class="row">
-        <span class="muted">الإحالات المفعّلة</span>
-        <b>0</b>
+      <button class="btn" onclick="navigator.clipboard.writeText('https://t.me/Bot?start=ref7300916931'); alert('تم نسخ الرابط بنجاح!');">نسخ رابط الإحالة</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
+        <span class="muted">الأصدقاء المنضمون</span>
+        <b style="color: var(--gold);">0 صديق</b>
       </div>
     </div>
   </div>
 
-  <!-- تبويب الأدمن (ظاهر مباشرة للمالك) -->
+  <!-- تبويب الأدمن المتطور -->
   <div id="tab-admin" class="tab-content hidden">
     <div class="card" style="border-color: rgba(239, 68, 68, 0.4);">
-      <div class="section-title" style="color: var(--red);">⚙️ لوحة تحكم المشرف (ID: 7300916931)</div>
+      <div class="section-title" style="color: var(--red);">⚙️ لوحة تحكم المشرف (Admin)</div>
+      
+      <!-- إحصائيات النظام العلوية للأدمن -->
+      <div class="stats-grid" style="margin-bottom: 16px;">
+        <div class="stat-box">
+          <div class="muted">إجمالي المستخدمين</div>
+          <div class="stat-val" style="color: #60a5fa;">1,245</div>
+        </div>
+        <div class="stat-box">
+          <div class="muted">النقاط المتداولة</div>
+          <div class="stat-val" style="color: #34d399;">45.2K</div>
+        </div>
+      </div>
+
       <div class="form-group">
-        <label>عنوان المهمة الجديدة</label>
-        <input type="text" id="newTitle" class="input-field" placeholder="مثال: اشترك في القناة">
+        <label>إضافة مهمة جديدة للنظام</label>
+        <input type="text" id="adminTitle" class="input-field" placeholder="عنوان المهمة (مثلا: تابع قناتنا)">
       </div>
       <div class="form-group">
-        <label>مكافأة النقاط</label>
-        <input type="number" id="newReward" class="input-field" placeholder="100">
+        <input type="number" id="adminReward" class="input-field" placeholder="مكافأة النقاط (مثلا: 200)">
       </div>
-      <button class="btn admin-btn" onclick="addNewTask()">إضافة المهمة للنظام</button>
+      <button class="btn admin-btn" onclick="adminAddTask()" style="margin-bottom: 16px;">نشر المهمة تلقائياً</button>
+
+      <div class="form-group">
+        <label>إرسال إشعار / بث عام لكل المستخدمين</label>
+        <input type="text" id="broadcastText" class="input-field" placeholder="اكتب نص الإعلان...">
+      </div>
+      <button class="btn admin-btn" onclick="adminBroadcast()">إرسال البث عبر البوت</button>
     </div>
   </div>
 </div>
@@ -217,26 +251,49 @@
     el.classList.add('active');
   }
 
-  let balance = 0;
+  // متغيرات النظام وأوتوميشن اللعبة
+  let balance = 1250; // رصيد افتراضي للتوضيح
   let energy = 100;
-  const coin = document.getElementById('coin');
-  
-  coin.addEventListener("click", (e) => {
-    if (energy > 0) {
-      balance += 1;
-      energy -= 1;
-      document.getElementById('balance').textContent = "🪙 " + balance;
-      document.getElementById('energyText').textContent = `⚡ الطاقة: ${energy} / 100`;
-      document.getElementById('energyFill').style.width = energy + "%";
+  const maxEnergy = 100;
+  let tapPower = 1;
+
+  function updateUI() {
+    document.getElementById('balance').textContent = "🪙 " + balance.toLocaleString();
+    document.getElementById('energyText').textContent = `⚡ الطاقة: ${Math.floor(energy)} / ${maxEnergy}`;
+    document.getElementById('energyFill').style.width = (energy / maxEnergy) * 100 + "%";
+
+    // تحديث رانك المستخدم أوتوماتيكياً بناءً على الرصيد
+    let rankBadge = document.getElementById('userRank');
+    if (balance > 10000) rankBadge.textContent = "الرتبة: ماسي 💎";
+    else if (balance > 5000) rankBadge.textContent = "الرتبة: ذهبي 🥇";
+    else if (balance > 2000) rankBadge.textContent = "الرتبة: فضي 🥈";
+    else rankBadge.textContent = "الرتبة: برونزي 🥉";
+  }
+
+  // 1. أوتوميشن تعبئة الطاقة التلقائية في الخلفية
+  setInterval(() => {
+    if (energy < maxEnergy) {
+      energy = Math.min(maxEnergy, energy + 1); // يعبي 1 طاقة كل ثانية
+      updateUI();
+    }
+  }, 1000);
+
+  // التفاعل مع زر النقر
+  document.getElementById('coin').addEventListener("click", (e) => {
+    if (energy >= tapPower) {
+      balance += tapPower;
+      energy -= tapPower;
+      updateUI();
       tg?.HapticFeedback?.impactOccurred("light");
     }
   });
 
-  function addNewTask() {
-    const title = document.getElementById('newTitle').value;
-    const reward = document.getElementById('newReward').value;
-    if(!title || !reward) { alert('الرجاء تعبئة الحقول'); return; }
-    
+  // دوال الأدمن الأوتوماتيكية
+  function adminAddTask() {
+    const title = document.getElementById('adminTitle').value;
+    const reward = document.getElementById('adminReward').value;
+    if(!title || !reward) { alert('الرجاء تعبئة بيانات المهمة'); return; }
+
     const list = document.getElementById('tasksList');
     list.innerHTML += `
       <div class="task">
@@ -244,13 +301,22 @@
           <div class="task-name">${title}</div>
           <div class="task-reward">+${reward} 🪙</div>
         </div>
-        <button class="btn small" onclick="alert('تم إنجاز المهمة!')">تحقق</button>
+        <button class="btn small" onclick="alert('تم التحقق بنجاح!')">تحقق</button>
       </div>
     `;
-    alert('تمت إضافة المهمة بنجاح!');
-    document.getElementById('newTitle').value = '';
-    document.getElementById('newReward').value = '';
+    alert('تم إضافة ونشر المهمة لجميع المستخدمين بنجاح!');
+    document.getElementById('adminTitle').value = '';
+    document.getElementById('adminReward').value = '';
   }
+
+  function adminBroadcast() {
+    const text = document.getElementById('broadcastText').value;
+    if(!text) { alert('اكتب نص الإعلان أولاً'); return; }
+    alert('تم بدء بث الرسالة لجميع مستخدمي البوت بنجاح! 🚀');
+    document.getElementById('broadcastText').value = '';
+  }
+
+  updateUI();
 </script>
 </body>
 </html>

@@ -2,100 +2,40 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>التحقق من أمان الجهاز</title>
-    <!-- استدعاء مكتبة توليد بصمة الجهاز الشهيرة -->
+    <title>التحقق الأمني من الجهاز</title>
     <script src="https://openfpcdn.io/fingerprintjs/v3"></script>
     <style>
-        body {
-            font-family: Tahoma, sans-serif;
-            background-color: #0f172a;
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            text-align: center;
-        }
-        .card {
-            background-color: #1e293b;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            max-width: 320px;
-            width: 100%;
-        }
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border-left-color: #3b82f6;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        #status {
-            font-size: 14px;
-            color: #94a3b8;
-        }
+        body { font-family: Tahoma; background: #0f172a; color: #fff; text-align: center; padding-top: 50px; }
     </style>
 </head>
 <body>
-
-    <div class="card">
-        <h2>جاري التحقق الأمني...</h2>
-        <div class="spinner"></div>
-        <p id="status">يرجى الانتظار بينما نقوم بتأكيد بصمة جهازك.</p>
-    </div>
+    <h2>جاري التحقق من أمان الجهاز...</h2>
+    <p id="msg">يرجى الانتظار قليلاً.</p>
 
     <script>
-        // التأكد من تحميل بيئة التيليجرام WebApp
         const tg = window.Telegram.WebApp;
         tg.ready();
-
-        // استخراج معرف المستخدم من تيليجرام
         const userId = tg.initDataUnsafe?.user?.id;
 
         if (!userId) {
-            document.getElementById('status').innerText = "❌ خطأ: يفتح التطبيق من داخل التيليجرام فقط.";
+            document.getElementById('msg').innerText = "❌ يفتح من داخل تيليجرام فقط.";
         } else {
-            // توليد بصمة فريدة للجهاز
             FingerprintJS.load().then(fp => {
                 fp.get().then(result => {
-                    const visitorId = result.visitorId; // البصمة الفريدة
+                    const visitorId = result.visitorId; // بصمة الجهاز الفريدة
+                    
+                    // فحص الذاكرة المحلية للمتصفح (Local Storage) لمنع تعدد الحسابات على نفس المتصفح/الجهاز
+                    const savedUser = localStorage.getItem('device_fingerprint');
 
-                    // إرسال البيانات إلى السيرفر الخاص بك (الذي يعمل على المنفذ 8080 أو رابط سيرفرك)
-                    fetch('https://your-bot-server.com/verify-device', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            user_id: userId,
-                            fingerprint: visitorId
-                        })
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            document.getElementById('status').innerText = "✅ تم التحقق بنجاح! جاري العودة للبوت...";
-                            setTimeout(() => {
-                                tg.close(); // إغلاق النافذة والعودة للبوت تلقائياً
-                            }, 1500);
-                        } else {
-                            response.text().then(text => {
-                                document.getElementById('status').innerText = "⚠️ تنبيه: " + text;
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        document.getElementById('status').innerText = "❌ حدث خطأ في الاتصال بالسيرفر.";
-                        console.error('Error:', error);
-                    });
+                    if (savedUser && savedUser !== String(userId)) {
+                        document.getElementById('msg').innerText = "⚠️ تنبيه: هذا الجهاز مسجل مسبقاً بحساب تيليجرام آخر ولا يمكن استخدام حساب متعدد!";
+                    } else {
+                        localStorage.setItem('device_fingerprint', userId);
+                        document.getElementById('msg').innerText = "✅ تم التحقق من الجهاز بنجاح!";
+                        setTimeout(() => {
+                            tg.close(); // إغلاق النافذة والعودة للبوت
+                        }, 1200);
+                    }
                 });
             });
         }

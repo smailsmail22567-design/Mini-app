@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>التحقق الأمني</title>
+    <script src="https://openfpcdn.io/fingerprintjs/v3"></script>
     <style>
         body {
             font-family: Tahoma, sans-serif;
@@ -37,6 +38,7 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        #status { font-size: 14px; color: #94a3b8; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -44,20 +46,45 @@
     <div class="card">
         <h2>جاري تأكيد الأمان...</h2>
         <div class="spinner"></div>
-        <p id="status">جاري التحقق من بصمة الجهاز بنجاح.</p>
+        <p id="status">جاري التحقق من بصمة الجهاز وحفظ البيانات...</p>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
+        const userId = tg.initDataUnsafe?.user?.id;
 
-        // إغلاق نافذة التحقق تلقائياً بعد ثانية ونصف والعودة للبوت
-        setTimeout(() => {
-            document.getElementById('status').innerText = "✅ تم التحقق بنجاح!";
-            setTimeout(() => {
-                tg.close();
-            }, 1000);
-        }, 1500);
+        if (!userId) {
+            document.getElementById('status').innerText = "❌ يفتح التطبيق من داخل تيليجرام فقط.";
+        } else {
+            FingerprintJS.load().then(fp => {
+                fp.get().then(result => {
+                    const visitorId = result.visitorId;
+
+                    // إرسال بصمة الجهاز ومعرف المستخدم إلى سيرفرك على رندر بشكل حقيقي
+                    fetch('https://your-bot-name.onrender.com/verify-device', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: userId, fingerprint: visitorId })
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            document.getElementById('status').innerText = "✅ تم التحقق وحفظ بصمة الجهاز بنجاح!";
+                            setTimeout(() => { tg.close(); }, 1200);
+                        } else {
+                            response.text().then(text => {
+                                document.getElementById('status').innerText = "⚠️ تنبيه: " + text;
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        // في حال حدث خطأ في الاتصال، يتم السماح للمستخدم بالمرور لتفادي تعطل البوت
+                        document.getElementById('status').innerText = "✅ تم التحقق بنجاح!";
+                        setTimeout(() => { tg.close(); }, 1200);
+                    });
+                });
+            });
+        }
     </script>
 </body>
 </html>

@@ -1,90 +1,108 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>التحقق الأمني</title>
-    <script src="https://openfpcdn.io/fingerprintjs/v3"></script>
-    <style>
-        body {
-            font-family: Tahoma, sans-serif;
-            background-color: #0f172a;
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            text-align: center;
-        }
-        .card {
-            background-color: #1e293b;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            max-width: 320px;
-            width: 100%;
-        }
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border-left-color: #3b82f6;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        #status { font-size: 14px; color: #94a3b8; margin-top: 15px; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>التحقق من الجهاز</title>
+  <style>
+    *{box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,sans-serif;background:#0f0f12;color:#eee;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .card{background:#1a1a20;border-radius:16px;padding:32px 22px;max-width:380px;width:100%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+    h2{margin:0 0 16px;font-size:20px}
+    #msg{font-size:15px;line-height:1.8;min-height:1.8em}
+    .ok{color:#4ade80}.err{color:#f87171}.wait{color:#facc15}
+    .spinner{width:36px;height:36px;margin:20px auto 0;border:3px solid #333;border-top-color:#4f8cff;border-radius:50%;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
 </head>
 <body>
+  <div class="card">
+    <h2>🔐 التحقق من الجهاز</h2>
+    <div id="msg" class="wait">جاري التحقق من بصمة الجهاز والأمان...</div>
+    <div id="spinner" class="spinner"></div>
+  </div>
 
-    <div class="card">
-        <h2>جاري تأكيد الأمان...</h2>
-        <div class="spinner"></div>
-        <p id="status">جاري التحقق من بصمة الجهاز وحفظ البيانات...</p>
-    </div>
+  <script>
+    const msg = document.getElementById('msg');
+    const spinner = document.getElementById('spinner');
+    const token = new URLSearchParams(location.search).get('t');
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        const userId = tg.initDataUnsafe?.user?.id;
+    const setMsg = (text, cls = '') => {
+      msg.textContent = text;
+      msg.className = cls;
+    };
 
-        if (!userId) {
-            document.getElementById('status').innerText = "❌ يفتح التطبيق من داخل تيليجرام فقط.";
+    async function sha256(str) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+      return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function canvasSignature() {
+      const cv = document.createElement('canvas');
+      cv.width = 240; cv.height = 60;
+      const ctx = cv.getContext('2d');
+      ctx.textBaseline = 'top';
+      ctx.font = '14px Arial';
+      ctx.fillStyle = '#f60';
+      ctx.fillRect(10, 1, 120, 30);
+      ctx.fillStyle = '#069';
+      ctx.fillText('verify 123 ✓', 2, 15);
+      ctx.fillStyle = 'rgba(102,204,0,0.7)';
+      ctx.fillText('verify 123 ✓', 4, 17);
+      return cv.toDataURL();
+    }
+
+    function webglRenderer() {
+      try {
+        const gl = document.createElement('canvas').getContext('webgl');
+        const ext = gl.getExtension('WEBGL_debug_renderer_info');
+        return ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : 'none';
+      } catch {
+        return 'none';
+      }
+    }
+
+    async function collectComponents() {
+      return {
+        canvas: await sha256(canvasSignature()),
+        webgl: await sha256(webglRenderer()),
+        screen: `${screen.width}x${screen.height}x${screen.colorDepth}`,
+        platform: navigator.platform,
+      };
+    }
+
+    async function runVerification() {
+      try {
+        const components = await collectComponents();
+        
+        // استبدل الرابط أدناه برابط مشروعك الحقيقي على Render
+        const res = await fetch('https://netflix-6rkc.onrender.com/api/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, components }),
+        });
+
+        spinner.style.display = 'none';
+
+        if (res.ok) {
+          setMsg('✅ تم التحقق بنجاح. يمكنك إغلاق الصفحة والرجوع إلى البوت.', 'ok');
+          setTimeout(() => {
+            if (window.Telegram && window.Telegram.WebApp) {
+              window.Telegram.WebApp.close();
+            }
+          }, 1500);
+        } else if (res.status === 409) {
+          setMsg('⛔ هذا الجهاز مسجّل مسبقاً بحساب آخر.', 'err');
         } else {
-            FingerprintJS.load().then(fp => {
-                fp.get().then(result => {
-                    const visitorId = result.visitorId;
-
-                    // إرسال بصمة الجهاز ومعرف المستخدم إلى سيرفرك على رندر بشكل حقيقي
-                    fetch('https://your-bot-name.onrender.com/verify-device', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user_id: userId, fingerprint: visitorId })
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            document.getElementById('status').innerText = "✅ تم التحقق وحفظ بصمة الجهاز بنجاح!";
-                            setTimeout(() => { tg.close(); }, 1200);
-                        } else {
-                            response.text().then(text => {
-                                document.getElementById('status').innerText = "⚠️ تنبيه: " + text;
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        // في حال حدث خطأ في الاتصال، يتم السماح للمستخدم بالمرور لتفادي تعطل البوت
-                        document.getElementById('status').innerText = "✅ تم التحقق بنجاح!";
-                        setTimeout(() => { tg.close(); }, 1200);
-                    });
-                });
-            });
+          setMsg('⚠️ الرابط منتهٍ أو مستخدم. أرسل /start من جديد.', 'err');
         }
-    </script>
+      } catch {
+        spinner.style.display = 'none';
+        setMsg('تعذّر الاتصال بالسيرفر. أعد المحاولة لاحقاً.', 'err');
+      }
+    }
+
+    runVerification();
+  </script>
 </body>
 </html>

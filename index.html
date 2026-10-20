@@ -1,43 +1,127 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>التحقق من الجهاز</title>
-  <style>
-    *{box-sizing:border-box}
-    body{font-family:system-ui,-apple-system,sans-serif;background:#0f0f12;color:#eee;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-    .card{background:#1a1a20;border-radius:16px;padding:32px 22px;max-width:380px;width:100%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.4)}
-    h2{margin:0 0 16px;font-size:20px}
-    #msg{font-size:15px;line-height:1.8;min-height:1.8em}
-    .ok{color:#4ade80}.wait{color:#facc15}
-    .spinner{width:36px;height:36px;margin:20px auto 0;border:3px solid #333;border-top-color:#4f8cff;border-radius:50%;animation:spin 1s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZORO Security Verification</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background: #121212; 
+            color: #fff; 
+            text-align: center; 
+            padding: 40px 20px; 
+            margin: 0;
+        }
+        .card { 
+            background: #1e1e1e; 
+            border-radius: 12px; 
+            padding: 25px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); 
+            max-width: 400px;
+            margin: auto;
+        }
+        .btn { 
+            background: #0088cc; 
+            color: white; 
+            border: none; 
+            padding: 14px 28px; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            margin-top: 20px; 
+            width: 100%;
+        }
+        .btn:hover {
+            background: #006699;
+        }
+        .loader { 
+            display: none; 
+            margin: 20px auto; 
+            border: 4px solid #333; 
+            border-top: 4px solid #0088cc; 
+            border-radius: 50%; 
+            width: 40px; 
+            height: 40px; 
+            animation: spin 1s linear infinite; 
+        }
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        .desc {
+            color: #b0b0b0;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-top: 15px;
+        }
+    </style>
 </head>
 <body>
-  <div class="card">
-    <h2>🔐 التحقق من الجهاز</h2>
-    <div id="msg" class="wait">جاري تأكيد بصمة الجهاز والأمان...</div>
-    <div id="spinner" class="spinner"></div>
-  </div>
+    <div class="card">
+        <h2>🛡️ نظام التحقق الأمني ZORO</h2>
+        <p class="desc">لمنع الحسابات الوهمية وتعدد الحسابات، يرجى الضغط أدناه للتحقق من بصمة جهازك وتأمين حسابك نهائياً.</p>
+        <div class="loader" id="loader"></div>
+        <button class="btn" id="verifyBtn" onclick="verifyDevice()">التحقق من الجهاز الآن</button>
+    </div>
 
-  <script>
-    const msg = document.getElementById('msg');
-    const spinner = document.getElementById('spinner');
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
 
-    // التحقق المحلي الفوري وإغلاق النافذة بسلاسة تامة دون أخطاء اتصال
-    setTimeout(() => {
-      spinner.style.display = 'none';
-      msg.textContent = '✅ تم التحقق من الجهاز بنجاح!';
-      msg.className = 'ok';
-      
-      setTimeout(() => {
-        if (window.Telegram && window.Telegram.WebApp) {
-          window.Telegram.WebApp.close();
+        // توليد بصمة فريدة للجهاز بناءً على خصائص الشاشة والرسومات والمعالج
+        function getFingerprint() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = "top";
+            ctx.font = "14px 'Arial'";
+            ctx.fillStyle = "#f60";
+            ctx.fillRect(125, 1, 62, 20);
+            ctx.fillStyle = "#069";
+            ctx.fillText("ZORO_FP", 2, 15);
+            return canvas.toDataURL().slice(-50) + screen.width + "x" + screen.height + (navigator.hardwareConcurrency || 4);
         }
-      }, 1000);
-    }, 1500);
-  </script>
+
+        function verifyDevice() {
+            document.getElementById('verifyBtn').style.display = 'none';
+            document.getElementById('loader').style.display = 'block';
+
+            const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
+            if (!user) {
+                alert("الرجاء فتح هذه الصفحة حصرياً داخل تطبيق تليجرام!");
+                document.getElementById('verifyBtn').style.display = 'block';
+                document.getElementById('loader').style.display = 'none';
+                return;
+            }
+
+            // استبدل الرابط أدناه برابط مشروعك الحقيقي على Render
+            fetch('https://netflix-6rkc.onrender.com/api/verify-device', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    user_id: user.id, 
+                    fingerprint: getFingerprint() 
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert("✅ تم التحقق من جهازك بنجاح!");
+                    tg.close();
+                } else {
+                    alert(data.message || "⛔ فشل التحقق أو تم كشف حساب مكرر!");
+                    document.getElementById('verifyBtn').style.display = 'block';
+                    document.getElementById('loader').style.display = 'none';
+                }
+            })
+            .catch(err => {
+                alert("❌ حدث خطأ في الاتصال بالشبكة، يرجى المحاولة مرة أخرى.");
+                document.getElementById('verifyBtn').style.display = 'block';
+                document.getElementById('loader').style.display = 'none';
+            });
+        }
+    </script>
 </body>
 </html>
